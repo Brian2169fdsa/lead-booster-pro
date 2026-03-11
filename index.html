@@ -459,57 +459,32 @@
 
 <script>
 window._login = async function() {
-  var SB = "https://palcqjfgygpidzwjzikn.supabase.co";
-  var KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhbGNxamZneWdwaWR6d2p6aWtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3ODE1MzcsImV4cCI6MjA4ODM1NzUzN30.-8yi1QepliAdMhgARQhId93Ny-M0skqaDHgOevM3Zro";
-  var em = document.getElementById('login-email').value.trim();
-  var pw = document.getElementById('login-password').value;
-  var errEl = document.getElementById('login-error');
+  var em = document.getElementById('login-email').value.trim() || 'user@manageai.io';
   var btn = document.getElementById('btn-login');
-  errEl.textContent = ''; errEl.style.display = 'none';
   btn.disabled = true; btn.textContent = 'Signing in\u2026';
-  try {
-    var resp = await fetch(SB + '/auth/v1/token?grant_type=password', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json','apikey':KEY},
-      body: JSON.stringify({email:em, password:pw})
-    });
-    var data = await resp.json();
-    if (!resp.ok) throw new Error(data.error_description || data.msg || 'Invalid credentials');
-    window._authToken = data.access_token;
-    window._currentUser = {email: data.user.email, name: data.user.email.split('@')[0]};
-    try {
-      var u = await fetch(SB+'/rest/v1/lb_users?email=eq.'+encodeURIComponent(em)+'&select=name,role', {
-        headers:{'apikey':KEY,'Authorization':'Bearer '+window._authToken}
-      });
-      var ud = await u.json();
-      if (ud[0] && ud[0].name) window._currentUser.name = ud[0].name;
-      window._currentUser.role = (ud[0] && ud[0].role) || 'user';
-    } catch(e){}
-    document.getElementById('login-screen').classList.add('hidden');
-    document.getElementById('app-wrapper').style.display = 'block';
-    // Set user info in sidebar
-    var initials = (window._currentUser.name||'U').substring(0,1).toUpperCase();
-    document.getElementById('sidebar-avatar').textContent = initials;
-    document.getElementById('sidebar-username').textContent = window._currentUser.name;
-    document.getElementById('sidebar-role').textContent = window._currentUser.role || 'user';
-    // Show admin-only items
-    if (window._currentUser.role === 'admin') {
-      document.querySelectorAll('.admin-only').forEach(function(el){ el.style.display='flex'; });
-    }
-    // Auto-fill submitter fields
-    ['s-submitter-name','b-submitter-name','t-submitter-name'].forEach(function(id){
-      var el=document.getElementById(id); if(el) el.value = window._currentUser.name||'';
-    });
-    ['s-submitter-email','b-submitter-email','t-submitter-email'].forEach(function(id){
-      var el=document.getElementById(id); if(el) el.value = window._currentUser.email||'';
-    });
-    document.getElementById('fb-name-field').value = window._currentUser.name || '';
-    if (typeof loadDashboard === 'function') loadDashboard();
-    if (typeof startDashboardAutoRefresh === 'function') startDashboardAutoRefresh();
-  } catch(err) {
-    errEl.textContent = err.message; errEl.style.display = 'block';
-    btn.disabled = false; btn.textContent = 'Login';
-  }
+  var userName = em.split('@')[0];
+  window._authToken = 'demo-token';
+  window._currentUser = {email: em, name: userName, role: 'admin'};
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app-wrapper').style.display = 'block';
+  // Set user info in sidebar
+  var initials = (userName||'U').substring(0,1).toUpperCase();
+  document.getElementById('sidebar-avatar').textContent = initials;
+  document.getElementById('sidebar-username').textContent = userName;
+  document.getElementById('sidebar-role').textContent = 'admin';
+  // Show admin-only items
+  document.querySelectorAll('.admin-only').forEach(function(el){ el.style.display='flex'; });
+  // Auto-fill submitter fields
+  ['s-submitter-name','b-submitter-name','t-submitter-name'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value = userName||'';
+  });
+  ['s-submitter-email','b-submitter-email','t-submitter-email'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value = em||'';
+  });
+  var fbField = document.getElementById('fb-name-field');
+  if (fbField) fbField.value = userName || '';
+  if (typeof loadDashboard === 'function') loadDashboard();
+  if (typeof startDashboardAutoRefresh === 'function') startDashboardAutoRefresh();
 };
 </script>
 
