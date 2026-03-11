@@ -431,6 +431,15 @@
     .search-input:focus { border-color: var(--accent); background: var(--bg); }
     .export-btn { padding: 9px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); font-size: 11px; font-weight: 700; color: var(--text-mid); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
     .export-btn:hover { background: var(--surface); color: var(--accent); border-color: var(--accent); }
+
+    /* History vertical tabs */
+    .hist-vert-tab {
+      padding: 8px 16px; border: none; background: none; font-size: 11.5px; font-weight: 600;
+      color: var(--text-dim); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px;
+      font-family: var(--font); transition: all 0.15s; white-space: nowrap;
+    }
+    .hist-vert-tab:hover { color: var(--text); }
+    .hist-vert-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 700; }
   </style>
 </head>
 <body>
@@ -761,6 +770,7 @@ window._login = async function() {
               <div class="chips" id="s-chips">
                 <button class="chip active" data-v="behavioral_health" onclick="selectChip(this,'s-chips')">Behavioral Health</button>
                 <button class="chip" data-v="construction" onclick="selectChip(this,'s-chips')">Construction</button>
+                <button class="chip" data-v="healthcare" onclick="selectChip(this,'s-chips')">Healthcare</button>
                 <button class="chip" data-v="medical_transport" onclick="selectChip(this,'s-chips')">Medical Transport</button>
                 <button class="chip" data-v="b2b_professional_services" onclick="selectChip(this,'s-chips')">B2B Services</button>
                 <button class="chip" data-v="health_wellness" onclick="selectChip(this,'s-chips')">Health &amp; Wellness</button>
@@ -780,7 +790,7 @@ window._login = async function() {
             <div class="summary-banner" id="summary-single" style="margin:0;border-radius:0;"></div>
           </div>
           <div style="height:14px;"></div>
-          <a href="https://docs.google.com/spreadsheets/d/1Vg5cHkFLFIxfS88l3gRymXgKWNJLhzIlt-3nkg2Z8k8/edit" target="_blank" class="sheet-link">
+          <a href="https://docs.google.com/spreadsheets/d/13u_dvoO9IOxAvh_0PZ9am1NWuM3rmX5J/edit?usp=sharing&ouid=108479578501426709246&rtpof=true&sd=true" target="_blank" class="sheet-link">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
             <div><div style="font-size:12px;font-weight:700;">Lead Booster Results Sheet</div><div style="font-size:10.5px;color:var(--text-dim);margin-top:1px;">Leads appear within 3–5 minutes · Sort by ICP Score column</div></div>
             <div class="sheet-arrow">Open Google Sheets →</div>
@@ -820,6 +830,7 @@ window._login = async function() {
               <select id="b-vertical">
                 <option value="behavioral_health">Behavioral Health</option>
                 <option value="construction">Construction</option>
+                <option value="healthcare">Healthcare</option>
                 <option value="medical_transport">Medical Transport</option>
                 <option value="b2b_professional_services">B2B Professional Services</option>
                 <option value="health_wellness">Health &amp; Wellness</option>
@@ -855,6 +866,7 @@ window._login = async function() {
               <div class="chips" id="t-chips">
                 <button class="chip active" data-v="behavioral_health" onclick="selectChip(this,'t-chips')">Behavioral Health</button>
                 <button class="chip" data-v="construction" onclick="selectChip(this,'t-chips')">Construction</button>
+                <button class="chip" data-v="healthcare" onclick="selectChip(this,'t-chips')">Healthcare</button>
                 <button class="chip" data-v="medical_transport" onclick="selectChip(this,'t-chips')">Medical Transport</button>
                 <button class="chip" data-v="b2b_professional_services" onclick="selectChip(this,'t-chips')">B2B Services</button>
                 <button class="chip" data-v="health_wellness" onclick="selectChip(this,'t-chips')">Health &amp; Wellness</button>
@@ -950,12 +962,19 @@ window._login = async function() {
                 <div class="page-sub">All enriched contacts from lb_contacts, sorted by most recent.</div>
               </div>
               <div style="display:flex;gap:8px;">
-                <button class="export-btn" onclick="exportHistoryCSV()">⬇ Export CSV</button>
+                <button class="export-btn" onclick="exportHistoryCSV()">⬇ Export Sheet</button>
                 <button class="btn-icon" onclick="loadHistory()">↻ Refresh</button>
               </div>
             </div>
           </div>
           <div class="card">
+            <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:14px;">
+              <button class="hist-vert-tab active" data-vert="" onclick="setHistVertical(this)">All Leads</button>
+              <button class="hist-vert-tab" data-vert="construction" onclick="setHistVertical(this)">construction</button>
+              <button class="hist-vert-tab" data-vert="behavioral_health" onclick="setHistVertical(this)">behavioral_health</button>
+              <button class="hist-vert-tab" data-vert="healthcare" onclick="setHistVertical(this)">healthcare</button>
+              <button class="hist-vert-tab" data-vert="medical_transport" onclick="setHistVertical(this)">medical_transport</button>
+            </div>
             <div class="search-bar-row">
               <input type="text" class="search-input" id="hist-search" placeholder="Search by name or company…" oninput="filterHistory()">
             </div>
@@ -1009,7 +1028,7 @@ window._login = async function() {
                   <div style="font-size:9.5px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;">Supabase Project</div>
                   <div style="font-family:var(--mono);font-size:10.5px;color:var(--text);">palcqjfgygpidzwjzikn.supabase.co</div>
                 </div>
-                <a href="https://docs.google.com/spreadsheets/d/1Vg5cHkFLFIxfS88l3gRymXgKWNJLhzIlt-3nkg2Z8k8/edit" target="_blank" style="background:var(--surface);border-radius:var(--radius);padding:10px 12px;display:block;text-decoration:none;">
+                <a href="https://docs.google.com/spreadsheets/d/13u_dvoO9IOxAvh_0PZ9am1NWuM3rmX5J/edit?usp=sharing&ouid=108479578501426709246&rtpof=true&sd=true" target="_blank" style="background:var(--surface);border-radius:var(--radius);padding:10px 12px;display:block;text-decoration:none;">
                   <div style="font-size:9.5px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;">Google Sheets</div>
                   <div style="font-size:10.5px;color:var(--accent);font-weight:600;">Open Results Sheet →</div>
                 </a>
@@ -1089,7 +1108,7 @@ window._login = async function() {
   <div class="quick-actions">
     <span class="qa-label">Quick Actions</span>
     <button class="btn-icon" onclick="loadDashboard()">🔄 Refresh Dashboard</button>
-    <a href="https://docs.google.com/spreadsheets/d/1Vg5cHkFLFIxfS88l3gRymXgKWNJLhzIlt-3nkg2Z8k8/edit" target="_blank" class="btn-icon">📊 Open Google Sheet</a>
+    <a href="https://docs.google.com/spreadsheets/d/13u_dvoO9IOxAvh_0PZ9am1NWuM3rmX5J/edit?usp=sharing&ouid=108479578501426709246&rtpof=true&sd=true" target="_blank" class="btn-icon">📊 Open Google Sheet</a>
     <button class="btn-icon" onclick="setTab('single')">▶ New Single Run</button>
     <button class="btn-icon" onclick="setTab('territory')">🗺 Territory Search</button>
   </div>
@@ -1619,9 +1638,20 @@ async function loadHistory(){
   renderHistPage();
 }
 
+let _histVertFilter='';
+
+function setHistVertical(btn){
+  document.querySelectorAll('.hist-vert-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  _histVertFilter=btn.dataset.vert||'';
+  filterHistory();
+}
+
 function filterHistory(){
   const q=(document.getElementById('hist-search').value||'').toLowerCase();
-  _histFiltered=!q?[..._histAll]:_histAll.filter(r=>{
+  _histFiltered=_histAll.filter(r=>{
+    if(_histVertFilter && (r.vertical||'')!==_histVertFilter) return false;
+    if(!q) return true;
     const name=((r.first_name||'')+(r.last_name||'')).toLowerCase();
     const co=(r.company_name||'').toLowerCase();
     return name.includes(q)||co.includes(q);
