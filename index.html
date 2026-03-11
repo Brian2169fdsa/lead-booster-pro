@@ -431,6 +431,9 @@
     .search-input:focus { border-color: var(--accent); background: var(--bg); }
     .export-btn { padding: 9px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); font-size: 11px; font-weight: 700; color: var(--text-mid); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
     .export-btn:hover { background: var(--surface); color: var(--accent); border-color: var(--accent); }
+    .vert-tab { padding: 7px 14px; border: 1.5px solid var(--border); border-radius: 20px; background: var(--bg); font-size: 11px; font-weight: 700; color: var(--text-mid); cursor: pointer; transition: all 0.15s; white-space: nowrap; font-family: var(--font); }
+    .vert-tab:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    .vert-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
   </style>
 </head>
 <body>
@@ -743,6 +746,28 @@ window._login = async function() {
             </div>
           </div>
 
+          <!-- SECTION: Spreadsheet by Vertical -->
+          <div class="section-head">Spreadsheet by Vertical</div>
+          <div class="card mb-24" style="margin-bottom:24px;">
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;" id="d-vert-tabs">
+              <button class="vert-tab active" data-vert="all" onclick="filterDashVertical(this,'all')">All Leads</button>
+              <button class="vert-tab" data-vert="construction" onclick="filterDashVertical(this,'construction')">Construction</button>
+              <button class="vert-tab" data-vert="behavioral_health" onclick="filterDashVertical(this,'behavioral_health')">Behavioral Health</button>
+              <button class="vert-tab" data-vert="healthcare" onclick="filterDashVertical(this,'healthcare')">Healthcare</button>
+              <button class="vert-tab" data-vert="medical_transport" onclick="filterDashVertical(this,'medical_transport')">Medical Transport</button>
+              <button class="vert-tab" data-vert="b2b_professional_services" onclick="filterDashVertical(this,'b2b_professional_services')">B2B Services</button>
+              <button class="vert-tab" data-vert="health_wellness" onclick="filterDashVertical(this,'health_wellness')">Health &amp; Wellness</button>
+              <button class="vert-tab" data-vert="home_services" onclick="filterDashVertical(this,'home_services')">Home Services</button>
+            </div>
+            <div id="d-vert-table">
+              <div class="empty-state" style="padding:14px;"><div class="empty-text">Select a vertical to view contacts</div></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;">
+              <div class="page-info" id="d-vert-info" style="font-size:10.5px;color:var(--text-dim);font-weight:600;"></div>
+              <button class="export-btn" onclick="exportDashVerticalCSV()">&#x2B07; Export CSV</button>
+            </div>
+          </div>
+
         </div><!-- end dashboard -->
 
         <!-- ====== SINGLE COMPANY ====== -->
@@ -950,7 +975,7 @@ window._login = async function() {
                 <div class="page-sub">All enriched contacts from lb_contacts, sorted by most recent.</div>
               </div>
               <div style="display:flex;gap:8px;">
-                <button class="export-btn" onclick="exportHistoryCSV()">⬇ Export CSV</button>
+                <button class="export-btn" onclick="exportHistoryCSV()">&#x2B07; Export CSV</button>
                 <button class="btn-icon" onclick="loadHistory()">↻ Refresh</button>
               </div>
             </div>
@@ -1411,6 +1436,13 @@ async function loadDashboard(){
   renderEmailDelivery(notifications||[]);
   renderTerritoryRunsDash(territory||[]);
   loadFeedbackSummary();
+  // Initialize vertical filter table
+  _dashVertFilter='all';
+  _dashVertFiltered=[..._contacts];
+  document.querySelectorAll('#d-vert-tabs .vert-tab').forEach(b=>b.classList.remove('active'));
+  var allBtn=document.querySelector('#d-vert-tabs .vert-tab[data-vert="all"]');
+  if(allBtn) allBtn.classList.add('active');
+  renderDashVertTable();
   _dashLoaded=true;
   // Show admin section
   if(window._currentUser && window._currentUser.role==='admin'){
@@ -1684,6 +1716,75 @@ function exportHistoryCSV(){
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
   a.download='leadbooster-contacts-'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click();
+}
+
+// ============================================================
+// DASHBOARD VERTICAL FILTER
+// ============================================================
+let _dashVertFilter='all', _dashVertFiltered=[];
+
+function filterDashVertical(btn, vert){
+  document.querySelectorAll('#d-vert-tabs .vert-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  _dashVertFilter=vert;
+  if(vert==='all'){
+    _dashVertFiltered=[..._contacts];
+  } else {
+    _dashVertFiltered=_contacts.filter(c=>(c.vertical||'')===vert);
+  }
+  renderDashVertTable();
+}
+
+function renderDashVertTable(){
+  const el=document.getElementById('d-vert-table');
+  const info=document.getElementById('d-vert-info');
+  if(!el) return;
+  const data=_dashVertFiltered;
+  if(!data.length){
+    el.innerHTML='<div class="empty-state" style="padding:14px;"><div class="empty-text">No contacts found for this vertical</div></div>';
+    if(info) info.textContent='0 contacts';
+    return;
+  }
+  const show=data.slice(0,25);
+  if(info) info.textContent=show.length+' of '+data.length+' contacts shown';
+  el.innerHTML=`<div style="overflow-x:auto;"><table class="hist-table"><thead><tr>
+    <th>Name</th><th>Title</th><th>Company</th><th>Vertical</th><th>ICP</th><th>Email</th><th>Completeness</th><th>Date</th>
+  </tr></thead><tbody>${show.map(r=>{
+    const name=[r.first_name,r.last_name].filter(Boolean).join(' ')||'—';
+    const score=r.icp_score;
+    const cls=score>=80?'high':score>=60?'mid':'low';
+    const email=r.email?'<span style="font-family:var(--mono);font-size:9.5px;">'+r.email+'</span>':'<span style="color:var(--text-dim);">—</span>';
+    const comp=r.final_completeness_score?r.final_completeness_score+'%':'—';
+    return '<tr>'+
+      '<td style="font-weight:700;">'+name+'</td>'+
+      '<td style="color:var(--text-mid);font-size:10.5px;">'+(r.title||'—')+'</td>'+
+      '<td style="font-weight:600;">'+(r.company_name||'—')+'</td>'+
+      '<td><span class="badge badge-blue" style="font-size:9px;">'+(r.vertical||'—').replace(/_/g,' ')+'</span></td>'+
+      '<td>'+(score!=null?'<span class="icp-cell '+cls+'">'+score+'</span>':'—')+'</td>'+
+      '<td>'+email+'</td>'+
+      '<td style="font-family:var(--mono);font-size:10.5px;">'+comp+'</td>'+
+      '<td style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);">'+fmtDate(r.created_at)+'</td></tr>';
+  }).join('')}</tbody></table></div>`;
+}
+
+function exportDashVerticalCSV(){
+  const data=_dashVertFiltered;
+  if(!data||!data.length){ alert('No data to export.'); return; }
+  const headers=['Name','Title','Company','Vertical','ICP Score','Email','LinkedIn','Completeness','Date'];
+  const rows=data.map(r=>[
+    [r.first_name,r.last_name].filter(Boolean).join(' '),
+    r.title||'',r.company_name||'',r.vertical||'',
+    r.icp_score||'',r.email||'',r.linkedin_url||'',
+    r.final_completeness_score?r.final_completeness_score+'%':'',
+    r.created_at?new Date(r.created_at).toLocaleDateString():''
+  ].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
+  const csv=[headers.join(','),...rows].join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  const vertLabel=_dashVertFilter==='all'?'all-leads':_dashVertFilter;
+  a.download='leadbooster-'+vertLabel+'-'+new Date().toISOString().split('T')[0]+'.csv';
   a.click();
 }
 
