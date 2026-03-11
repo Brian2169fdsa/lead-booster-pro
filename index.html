@@ -1,0 +1,1792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lead Booster Pro — ManageAI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #FFFFFF;
+      --surface: #F5F6F8;
+      --surface2: #EEF1F5;
+      --border: #E2E6EC;
+      --nav: #1E3348;
+      --nav-dark: #151F2E;
+      --accent: #4A8FD6;
+      --accent-hover: #3A7BC8;
+      --accent-light: #EFF6FF;
+      --accent-mid: #6BAAE0;
+      --text: #1E293B;
+      --text-mid: #475569;
+      --text-dim: #7A8B9A;
+      --green: #16A34A;
+      --green-light: #DCFCE7;
+      --amber: #D97706;
+      --amber-light: #FEF3C7;
+      --red: #DC2626;
+      --red-light: #FEE2E2;
+      --blue-light: #EFF6FF;
+      --mono: 'JetBrains Mono', monospace;
+      --font: 'Montserrat', sans-serif;
+      --radius: 8px;
+      --radius-lg: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+    input, select, textarea, button { font-family: var(--font); }
+    button { cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ===== LOGIN ===== */
+    #login-screen {
+      position: fixed; inset: 0; z-index: 9999;
+      background: var(--nav);
+      display: flex; align-items: center; justify-content: center;
+    }
+    #login-screen.hidden { display: none; }
+    .login-card {
+      background: #fff; border-radius: 16px; padding: 44px 48px;
+      width: 100%; max-width: 400px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.28);
+    }
+    .login-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; }
+    .login-logo .brand { font-size: 21px; font-weight: 800; letter-spacing: -0.5px; }
+    .login-logo .brand .m { color: var(--nav); }
+    .login-logo .brand .ai { color: var(--accent); }
+    .login-logo .tag { font-size: 10px; color: var(--text-dim); font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; border-left: 1px solid var(--border); padding-left: 10px; margin-left: 2px; }
+    .login-title { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 4px; letter-spacing: -0.3px; }
+    .login-sub { font-size: 13px; color: var(--text-mid); margin-bottom: 28px; }
+    .login-field { margin-bottom: 14px; }
+    .login-field label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.9px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px; }
+    .login-field input { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 14px; font-family: var(--font); outline: none; transition: border-color 0.2s, box-shadow 0.2s; color: var(--text); }
+    .login-field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(74,143,214,0.12); }
+    .login-error { background: var(--red-light); color: var(--red); font-size: 12px; font-weight: 600; padding: 10px 12px; border-radius: var(--radius); margin-bottom: 14px; display: none; }
+    .btn-login { width: 100%; padding: 13px; background: var(--accent); color: #fff; border: none; border-radius: 9px; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.2s, transform 0.15s; letter-spacing: 0.02em; }
+    .btn-login:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-1px); }
+    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* ===== APP LAYOUT ===== */
+    #app-wrapper { display: none; min-height: 100vh; }
+    .app-layout { display: flex; min-height: 100vh; }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: 220px; min-height: 100vh; background: var(--nav);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; z-index: 100;
+      border-right: 1px solid rgba(255,255,255,0.06);
+    }
+    .sidebar-logo {
+      padding: 22px 20px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .sidebar-brand { display: flex; align-items: center; gap: 2px; margin-bottom: 3px; }
+    .sidebar-brand .m { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: -0.3px; }
+    .sidebar-brand .ai { font-size: 18px; font-weight: 800; color: var(--accent); letter-spacing: -0.3px; }
+    .sidebar-sub { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.35); letter-spacing: 1.2px; text-transform: uppercase; }
+    .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+    .nav-section-label {
+      font-size: 8.5px; font-weight: 700; color: rgba(255,255,255,0.3);
+      text-transform: uppercase; letter-spacing: 1.2px;
+      padding: 14px 20px 6px;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 20px; cursor: pointer;
+      color: rgba(255,255,255,0.55); font-size: 12px; font-weight: 600;
+      border-left: 3px solid transparent;
+      transition: all 0.15s; position: relative;
+      background: transparent; border-top: none; border-right: none; border-bottom: none;
+      width: 100%; text-align: left;
+    }
+    .nav-item:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.05); }
+    .nav-item.active { color: #fff; border-left-color: var(--accent); background: rgba(74,143,214,0.12); }
+    .nav-item .nav-icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
+    .nav-item .nav-badge { margin-left: auto; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 10px; background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.5); }
+    .nav-item .nav-badge.soon { background: rgba(74,143,214,0.2); color: var(--accent-mid); }
+    .sidebar-user {
+      padding: 14px 18px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .sidebar-user-info { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .sidebar-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .sidebar-user-name { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.85); }
+    .sidebar-role { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.8px; }
+    .btn-sidebar-logout { width: 100%; padding: 7px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.45); cursor: pointer; transition: all 0.15s; text-align: center; }
+    .btn-sidebar-logout:hover { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }
+    .sidebar-status { display: flex; align-items: center; gap: 5px; font-size: 9px; font-weight: 700; color: var(--green); margin-bottom: 8px; }
+    .sidebar-status-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: pulseDot 2s infinite; }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      margin-left: 220px; flex: 1; min-height: 100vh;
+      display: flex; flex-direction: column;
+      padding-bottom: 60px;
+    }
+    .main-inner { padding: 28px 36px 24px; flex: 1; max-width: 1280px; }
+    .page-header { margin-bottom: 24px; }
+    .page-title { font-size: 24px; font-weight: 800; color: var(--text); letter-spacing: -0.03em; margin-bottom: 4px; }
+    .page-sub { font-size: 13px; color: var(--text-mid); line-height: 1.65; max-width: 600px; }
+
+    /* ===== TAB PANELS ===== */
+    .tab-panel { display: none; animation: fadeIn 0.2s ease; }
+    .tab-panel.active { display: block; }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg);
+      padding: 22px; box-shadow: var(--shadow);
+      transition: box-shadow 0.2s;
+    }
+    .card:hover { box-shadow: var(--shadow-md); }
+    .card-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .card-sub { font-size: 12px; color: var(--text-mid); margin-bottom: 18px; line-height: 1.6; }
+
+    /* ===== GRID LAYOUTS ===== */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+    .grid-6 { display: grid; grid-template-columns: repeat(6,1fr); gap: 12px; }
+    .grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+    .grid-3-2 { display: grid; grid-template-columns: 3fr 2fr; gap: 14px; }
+    .mb-14 { margin-bottom: 14px; }
+    .mb-20 { margin-bottom: 20px; }
+    .mb-24 { margin-bottom: 24px; }
+    .section-head {
+      font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .section-head::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .section-head .sh-right { font-size: 10px; font-weight: 600; color: var(--accent); cursor: pointer; letter-spacing: 0; text-transform: none; }
+    .section-head .sh-right::after { display: none; }
+
+    /* ===== KPI CARDS ===== */
+    .kpi {
+      background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg);
+      padding: 18px 20px; position: relative; overflow: hidden;
+      box-shadow: var(--shadow); transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .kpi:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .kpi.accent { border-left: 3px solid var(--accent); }
+    .kpi.green { border-left: 3px solid var(--green); }
+    .kpi.amber { border-left: 3px solid var(--amber); }
+    .kpi.purple { border-left: 3px solid #8B5CF6; }
+    .kpi-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--text-dim); margin-bottom: 8px; }
+    .kpi-value { font-size: 30px; font-weight: 800; font-family: var(--mono); color: var(--text); line-height: 1; margin-bottom: 4px; }
+    .kpi-sub { font-size: 10.5px; font-weight: 500; color: var(--text-dim); }
+
+    /* ===== BARS ===== */
+    .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .bar-label { font-size: 10.5px; font-weight: 700; color: var(--text-mid); width: 68px; flex-shrink: 0; }
+    .bar-track { flex: 1; height: 7px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s cubic-bezier(0.16,1,0.3,1); }
+    .bar-pct { font-size: 11px; font-weight: 700; font-family: var(--mono); color: var(--text); width: 36px; text-align: right; flex-shrink: 0; }
+    .bar-fill.email { background: var(--accent); }
+    .bar-fill.phone { background: var(--amber); }
+    .bar-fill.linkedin { background: #0A66C2; }
+
+    /* Source pills */
+    .src-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+    .src-pill { font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 20px; width: 64px; text-align: center; flex-shrink: 0; letter-spacing: 0.02em; }
+    .src-pill.hunter { background: #FEF3C7; color: #92400E; }
+    .src-pill.apollo { background: #EDE9FE; color: #5B21B6; }
+    .src-pill.pdl    { background: #D1FAE5; color: #065F46; }
+    .src-pill.snovio { background: #FEE2E2; color: #991B1B; }
+    .src-pill.website{ background: var(--accent-light); color: var(--accent); }
+    .src-pill.unknown{ background: var(--surface2); color: var(--text-dim); }
+    .src-track { flex: 1; height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+    .src-fill { height: 100%; border-radius: 3px; transition: width 0.8s cubic-bezier(0.16,1,0.3,1); }
+    .src-num { font-size: 10px; font-weight: 700; font-family: var(--mono); color: var(--text); width: 26px; text-align: right; }
+
+    /* ICP dist bars */
+    .icp-dist { display: flex; align-items: flex-end; gap: 3px; height: 60px; margin-bottom: 6px; }
+    .icp-bar { flex: 1; border-radius: 2px 2px 0 0; background: var(--accent-light); transition: height 0.6s cubic-bezier(0.16,1,0.3,1); min-height: 3px; position: relative; cursor: pointer; }
+    .icp-bar:hover { opacity: 0.8; }
+    .icp-bar:hover .icp-tip { display: block; }
+    .icp-tip { display: none; position: absolute; bottom: calc(100% + 5px); left: 50%; transform: translateX(-50%); background: var(--nav); color: #fff; font-size: 9px; font-weight: 700; padding: 3px 6px; border-radius: 4px; white-space: nowrap; z-index: 10; }
+    .icp-labels { display: flex; justify-content: space-between; font-size: 8px; font-weight: 600; color: var(--text-dim); font-family: var(--mono); }
+
+    /* Vert bars */
+    .vert-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .vert-label { font-size: 9.5px; font-weight: 700; color: var(--text-mid); width: 106px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vert-track { flex: 1; height: 9px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+    .vert-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--accent), var(--accent-mid)); transition: width 0.8s cubic-bezier(0.16,1,0.3,1); }
+    .vert-num { font-size: 10px; font-weight: 700; font-family: var(--mono); color: var(--text); width: 24px; text-align: right; }
+
+    /* Lead leaderboard */
+    .lead-row { display: flex; align-items: center; gap: 9px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .lead-row:last-child { border-bottom: none; }
+    .lead-rank { font-size: 10px; font-weight: 800; font-family: var(--mono); color: var(--text-dim); width: 18px; }
+    .lead-info { flex: 1; min-width: 0; }
+    .lead-name { font-size: 11.5px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lead-co { font-size: 10px; font-weight: 500; color: var(--text-dim); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lead-vert { font-size: 8px; font-weight: 700; padding: 2px 5px; border-radius: 3px; background: var(--surface); color: var(--text-dim); flex-shrink: 0; }
+    .lead-score { font-size: 13px; font-weight: 800; font-family: var(--mono); flex-shrink: 0; min-width: 28px; text-align: right; }
+    .lead-score.high { color: var(--green); }
+    .lead-score.mid { color: var(--amber); }
+    .lead-score.low { color: var(--text-dim); }
+
+    /* Queue table */
+    .q-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .q-table th { text-align: left; padding: 6px 10px; font-size: 9px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.07em; background: var(--surface); border-bottom: 1px solid var(--border); }
+    .q-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); font-weight: 500; }
+    .q-table tr:last-child td { border-bottom: none; }
+    .q-table tr:hover td { background: var(--surface); }
+    .status-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 10px; font-size: 9.5px; font-weight: 700; }
+    .status-chip.complete, .status-chip.completed { background: var(--green-light); color: var(--green); }
+    .status-chip.pending, .status-chip.queued { background: var(--amber-light); color: var(--amber); }
+    .status-chip.failed { background: var(--red-light); color: var(--red); }
+    .status-chip.running, .status-chip.processing { background: var(--accent-light); color: var(--accent); }
+    .status-chip-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+    .status-chip.running .status-chip-dot, .status-chip.processing .status-chip-dot { animation: pulseDot 1.2s infinite; }
+
+    /* Empty/loading states */
+    .empty-state { padding: 28px; text-align: center; }
+    .empty-icon { font-size: 28px; margin-bottom: 8px; }
+    .empty-text { font-size: 12px; font-weight: 600; color: var(--text-dim); }
+    .empty-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; font-weight: 400; max-width: 300px; margin-left: auto; margin-right: auto; line-height: 1.5; }
+    .dash-loading { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-dim); font-weight: 600; padding: 16px 0; }
+    .dash-loading-ring { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+
+    /* ===== OUTREACH SECTION ===== */
+    .outreach-mini-kpi { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 14px; }
+    .omk { padding: 12px 14px; background: var(--surface); border-radius: var(--radius); text-align: center; }
+    .omk-val { font-size: 22px; font-weight: 800; font-family: var(--mono); color: var(--text); }
+    .omk-label { font-size: 9px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+
+    /* ===== FORMS ===== */
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px; }
+    .field input, .field select, .field textarea {
+      width: 100%; padding: 10px 12px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      color: var(--text); font-size: 12px; font-weight: 500; outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); background: var(--bg); }
+    .field input::placeholder, .field textarea::placeholder { color: var(--text-dim); font-weight: 400; }
+    .field textarea { resize: vertical; min-height: 100px; line-height: 1.65; font-family: var(--mono); font-size: 11px; }
+    .field-hint { font-size: 10px; font-weight: 500; color: var(--text-dim); margin-top: 4px; font-family: var(--mono); }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+    /* Chips */
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip { padding: 5px 11px; border-radius: 5px; border: 1px solid var(--border); font-size: 10.5px; font-weight: 700; color: var(--text-dim); background: var(--bg); transition: all 0.15s; cursor: pointer; }
+    .chip.active { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+    .chip:hover:not(.active) { border-color: var(--text-dim); color: var(--text); background: var(--surface); }
+
+    /* Buttons */
+    .btn-primary { padding: 12px 22px; border-radius: var(--radius); border: none; background: var(--accent); color: #fff; font-size: 12.5px; font-weight: 700; letter-spacing: 0.01em; transition: all 0.2s; width: 100%; }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(74,143,214,0.28); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-secondary { padding: 9px 14px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 11px; font-weight: 700; transition: all 0.15s; }
+    .btn-secondary:hover { background: var(--surface); border-color: var(--text-dim); }
+    .btn-search { padding: 10px 18px; border-radius: var(--radius); border: none; background: var(--nav); color: #fff; font-size: 11.5px; font-weight: 700; transition: all 0.15s; }
+    .btn-search:hover:not(:disabled) { opacity: 0.88; }
+    .btn-search:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-icon { padding: 7px 12px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg); color: var(--text-mid); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px; }
+    .btn-icon:hover { background: var(--surface); color: var(--accent); border-color: var(--accent); }
+
+    /* Upload */
+    .upload-area { border: 2px dashed var(--border); border-radius: var(--radius); padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--surface); margin-bottom: 14px; }
+    .upload-area:hover, .upload-area.drag { border-color: var(--accent); background: var(--accent-light); }
+    .upload-icon { font-size: 26px; margin-bottom: 7px; }
+    .upload-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .upload-sub { font-size: 10.5px; font-weight: 500; color: var(--text-dim); }
+    .upload-input { display: none; }
+
+    /* Limit bar */
+    .limit-bar { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 14px; }
+    .limit-label { font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; }
+    .limit-track { flex: 1; height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+    .limit-fill { height: 100%; border-radius: 3px; transition: width 0.3s; background: var(--green); }
+    .limit-fill.warn { background: var(--amber); }
+    .limit-fill.over { background: var(--red); }
+    .limit-count { font-size: 11px; font-weight: 700; font-family: var(--mono); }
+    .limit-count.ok { color: var(--green); }
+    .limit-count.warn { color: var(--amber); }
+    .limit-count.over { color: var(--red); }
+
+    /* Territory preview */
+    .preview-list { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .preview-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--border); font-size: 11.5px; background: var(--bg); }
+    .preview-item:last-child { border-bottom: none; }
+    .preview-check { width: 15px; height: 15px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .preview-check svg { width: 8px; height: 8px; stroke: #fff; stroke-width: 2.5; fill: none; }
+    .preview-domain { font-family: var(--mono); font-size: 9.5px; color: var(--text-dim); margin-left: auto; }
+    .preview-badge { padding: 2px 7px; border-radius: 4px; font-size: 9px; font-weight: 700; background: var(--accent-light); color: var(--accent); }
+
+    /* Results */
+    .results-card { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 14px; display: none; }
+    .results-card.show { display: block; }
+    .result-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); animation: slideIn 0.3s ease; }
+    .result-row:last-child { border-bottom: none; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .status-dot.ok { background: var(--green); }
+    .status-dot.err { background: var(--red); }
+    .status-dot.pending { background: var(--accent); animation: pulseDot 1.2s infinite; }
+    .result-co { font-size: 11.5px; font-weight: 700; color: var(--text); }
+    .result-dom { font-size: 9.5px; font-weight: 500; color: var(--text-dim); font-family: var(--mono); margin-top: 1px; }
+    .result-status { margin-left: auto; font-size: 10.5px; font-weight: 700; font-family: var(--mono); flex-shrink: 0; }
+    .result-status.ok { color: var(--green); }
+    .result-status.err { color: var(--red); }
+    .result-status.pending { color: var(--accent); }
+    .summary-banner { display: none; padding: 12px 16px; border-radius: var(--radius); font-size: 12px; font-weight: 700; margin-top: 10px; }
+    .summary-banner.show { display: block; }
+    .summary-banner.success { background: var(--green-light); color: var(--green); }
+    .summary-banner.error { background: var(--amber-light); color: var(--amber); }
+
+    /* History table */
+    .hist-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+    .hist-table th { text-align: left; padding: 8px 12px; font-size: 9.5px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.07em; background: var(--surface); border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .hist-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--text); font-weight: 500; vertical-align: middle; }
+    .hist-table tr:last-child td { border-bottom: none; }
+    .hist-table tr:hover td { background: var(--surface); }
+    .icp-cell { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10.5px; font-weight: 700; font-family: var(--mono); }
+    .icp-cell.high { background: var(--green-light); color: var(--green); }
+    .icp-cell.mid { background: var(--accent-light); color: var(--accent); }
+    .icp-cell.low { background: var(--surface2); color: var(--text-dim); }
+    .badge { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+    .badge-blue { background: var(--accent-light); color: var(--accent); }
+    .badge-green { background: var(--green-light); color: var(--green); }
+    .badge-amber { background: var(--amber-light); color: var(--amber); }
+
+    /* Pagination */
+    .pagination { display: flex; align-items: center; justify-content: space-between; padding: 12px 0 0; }
+    .page-info { font-size: 11px; color: var(--text-dim); font-weight: 600; }
+    .page-btns { display: flex; gap: 6px; }
+    .page-btn { padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); font-size: 11px; font-weight: 600; color: var(--text-mid); cursor: pointer; transition: all 0.15s; }
+    .page-btn:hover:not(:disabled) { background: var(--surface); border-color: var(--text-dim); color: var(--text); }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .page-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* Feedback stars */
+    .fb-star { font-size: 26px; cursor: pointer; opacity: 0.28; transition: opacity 0.15s, color 0.15s; }
+    .fb-star.active { opacity: 1; color: #F59E0B; }
+
+    /* Sheet link */
+    .sheet-link { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); color: var(--text); font-size: 12px; font-weight: 700; transition: all 0.2s; }
+    .sheet-link:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    .sheet-arrow { margin-left: auto; font-size: 11px; color: var(--text-dim); font-weight: 500; }
+
+    /* Search spinner */
+    .search-spinner { display: none; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; color: var(--text-mid); }
+    .search-spinner.show { display: flex; }
+    .spinner-ring { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+
+    /* ===== STICKY QUICK ACTIONS ===== */
+    .quick-actions {
+      position: fixed; bottom: 0; left: 220px; right: 0;
+      background: rgba(255,255,255,0.96); backdrop-filter: blur(8px);
+      border-top: 1px solid var(--border); padding: 10px 36px;
+      display: flex; align-items: center; gap: 10px; z-index: 50;
+    }
+    .qa-label { font-size: 9.5px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-right: 4px; }
+
+    /* ===== FOOTER ===== */
+    .main-footer { 
+      border-top: 1px solid var(--border); padding: 12px 36px;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 10.5px; color: var(--text-dim); font-weight: 500;
+    }
+    .footer-brand .m { font-weight: 700; color: var(--text); }
+    .footer-brand .ai { font-weight: 700; color: var(--accent); }
+    .footer-conf { font-family: var(--mono); font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em; }
+
+    /* ===== PLACEHOLDER SECTIONS ===== */
+    .placeholder-section {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 80px 40px; text-align: center;
+      background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg);
+      border-style: dashed;
+    }
+    .placeholder-icon { font-size: 52px; margin-bottom: 16px; opacity: 0.6; }
+    .placeholder-title { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 8px; letter-spacing: -0.02em; }
+    .placeholder-desc { font-size: 13px; color: var(--text-mid); line-height: 1.7; max-width: 420px; }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes pulseDot { 0%,100%{transform:scale(1);opacity:0.7} 50%{transform:scale(1.4);opacity:1} }
+    @keyframes slideIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1100px) {
+      .grid-4 { grid-template-columns: repeat(2,1fr); }
+      .grid-6 { grid-template-columns: repeat(3,1fr); }
+    }
+    @media (max-width: 900px) {
+      .grid-3 { grid-template-columns: 1fr 1fr; }
+      .grid-2-1, .grid-3-2 { grid-template-columns: 1fr; }
+    }
+
+    /* ICP score history search bar */
+    .search-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .search-input { flex: 1; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 12px; font-family: var(--font); outline: none; background: var(--surface); color: var(--text); }
+    .search-input:focus { border-color: var(--accent); background: var(--bg); }
+    .export-btn { padding: 9px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); font-size: 11px; font-weight: 700; color: var(--text-mid); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .export-btn:hover { background: var(--surface); color: var(--accent); border-color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="brand"><span class="m">MANAGE</span><span class="ai">AI</span></div>
+      <div class="tag">Lead Booster Pro</div>
+    </div>
+    <div class="login-title">Welcome back</div>
+    <div class="login-sub">Sign in to access Lead Booster Pro</div>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-field">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="you@manageai.io" autocomplete="email" onkeydown="if(event.key==='Enter')window._login()">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')window._login()">
+    </div>
+    <button class="btn-login" id="btn-login" onclick="window._login()">Login</button>
+  </div>
+</div>
+
+<script>
+window._login = async function() {
+  var SB = "https://palcqjfgygpidzwjzikn.supabase.co";
+  var KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhbGNxamZneWdwaWR6d2p6aWtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3ODE1MzcsImV4cCI6MjA4ODM1NzUzN30.-8yi1QepliAdMhgARQhId93Ny-M0skqaDHgOevM3Zro";
+  var em = document.getElementById('login-email').value.trim();
+  var pw = document.getElementById('login-password').value;
+  var errEl = document.getElementById('login-error');
+  var btn = document.getElementById('btn-login');
+  errEl.textContent = ''; errEl.style.display = 'none';
+  btn.disabled = true; btn.textContent = 'Signing in\u2026';
+  try {
+    var resp = await fetch(SB + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','apikey':KEY},
+      body: JSON.stringify({email:em, password:pw})
+    });
+    var data = await resp.json();
+    if (!resp.ok) throw new Error(data.error_description || data.msg || 'Invalid credentials');
+    window._authToken = data.access_token;
+    window._currentUser = {email: data.user.email, name: data.user.email.split('@')[0]};
+    try {
+      var u = await fetch(SB+'/rest/v1/lb_users?email=eq.'+encodeURIComponent(em)+'&select=name,role', {
+        headers:{'apikey':KEY,'Authorization':'Bearer '+window._authToken}
+      });
+      var ud = await u.json();
+      if (ud[0] && ud[0].name) window._currentUser.name = ud[0].name;
+      window._currentUser.role = (ud[0] && ud[0].role) || 'user';
+    } catch(e){}
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app-wrapper').style.display = 'block';
+    // Set user info in sidebar
+    var initials = (window._currentUser.name||'U').substring(0,1).toUpperCase();
+    document.getElementById('sidebar-avatar').textContent = initials;
+    document.getElementById('sidebar-username').textContent = window._currentUser.name;
+    document.getElementById('sidebar-role').textContent = window._currentUser.role || 'user';
+    // Show admin-only items
+    if (window._currentUser.role === 'admin') {
+      document.querySelectorAll('.admin-only').forEach(function(el){ el.style.display='flex'; });
+    }
+    // Auto-fill submitter fields
+    ['s-submitter-name','b-submitter-name','t-submitter-name'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.value = window._currentUser.name||'';
+    });
+    ['s-submitter-email','b-submitter-email','t-submitter-email'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.value = window._currentUser.email||'';
+    });
+    document.getElementById('fb-name-field').value = window._currentUser.name || '';
+    if (typeof loadDashboard === 'function') loadDashboard();
+    if (typeof startDashboardAutoRefresh === 'function') startDashboardAutoRefresh();
+  } catch(err) {
+    errEl.textContent = err.message; errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Login';
+  }
+};
+</script>
+
+<!-- ===== APP ===== -->
+<div id="app-wrapper">
+  <div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-brand"><span class="m">MANAGE</span><span class="ai">AI</span></div>
+        <div class="sidebar-sub">Lead Booster Pro v3.0</div>
+      </div>
+      <div class="sidebar-nav">
+        <div class="nav-section-label">Overview</div>
+        <button class="nav-item active" id="nav-dashboard" onclick="setTab('dashboard')">
+          <span class="nav-icon">📊</span> Dashboard
+        </button>
+        <div class="nav-section-label">Pipeline</div>
+        <button class="nav-item" id="nav-single" onclick="setTab('single')">
+          <span class="nav-icon">🏢</span> Single Company
+        </button>
+        <button class="nav-item" id="nav-bulk" onclick="setTab('bulk')">
+          <span class="nav-icon">📋</span> Bulk Upload
+        </button>
+        <button class="nav-item" id="nav-territory" onclick="setTab('territory')">
+          <span class="nav-icon">🗺️</span> Territory Search
+        </button>
+        <div class="nav-section-label">Intelligence</div>
+        <button class="nav-item" id="nav-outreach" onclick="setTab('outreach')">
+          <span class="nav-icon">📬</span> Outreach
+          <span class="nav-badge soon">Phase 3</span>
+        </button>
+        <button class="nav-item" id="nav-intelligence" onclick="setTab('intelligence')">
+          <span class="nav-icon">📈</span> Intelligence
+          <span class="nav-badge soon">Phase 2</span>
+        </button>
+        <div class="nav-section-label">Data</div>
+        <button class="nav-item" id="nav-history" onclick="setTab('history')">
+          <span class="nav-icon">📜</span> History
+        </button>
+        <button class="nav-item" id="nav-settings" onclick="setTab('settings')">
+          <span class="nav-icon">⚙️</span> Settings
+        </button>
+        <button class="nav-item" id="nav-feedback" onclick="setTab('feedback')">
+          <span class="nav-icon">💬</span> Feedback
+        </button>
+      </div>
+      <div class="sidebar-user">
+        <div class="sidebar-status"><div class="sidebar-status-dot"></div>System Online</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-avatar" id="sidebar-avatar">B</div>
+          <div>
+            <div class="sidebar-user-name" id="sidebar-username">—</div>
+            <div class="sidebar-role" id="sidebar-role">user</div>
+          </div>
+        </div>
+        <button class="btn-sidebar-logout" onclick="logout()">Sign Out</button>
+      </div>
+    </nav>
+
+    <!-- MAIN -->
+    <div class="main-content">
+      <div class="main-inner">
+
+        <!-- ====== DASHBOARD TAB ====== -->
+        <div id="tab-dashboard" class="tab-panel active">
+          <div class="page-header">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div class="page-title">Dashboard</div>
+                <div class="page-sub">Live pipeline health, enrichment intelligence, and system status.</div>
+              </div>
+              <button class="btn-icon" onclick="loadDashboard()">↻ Refresh</button>
+            </div>
+          </div>
+
+          <!-- SECTION 1: Pipeline Health KPIs -->
+          <div class="section-head">Pipeline Health</div>
+          <div class="grid-4 mb-14" id="d-kpi-row1">
+            <div class="kpi accent">
+              <div class="kpi-label">Total Contacts</div>
+              <div class="kpi-value" id="d-total">—</div>
+              <div class="kpi-sub">All time in system</div>
+            </div>
+            <div class="kpi green">
+              <div class="kpi-label">Added Today</div>
+              <div class="kpi-value" id="d-today">—</div>
+              <div class="kpi-sub">Since midnight UTC</div>
+            </div>
+            <div class="kpi amber">
+              <div class="kpi-label">Avg ICP Score</div>
+              <div class="kpi-value" id="d-avgicp">—</div>
+              <div class="kpi-sub">Across all scored contacts</div>
+            </div>
+            <div class="kpi purple">
+              <div class="kpi-label">Avg Completeness</div>
+              <div class="kpi-value" id="d-avgcomp">—</div>
+              <div class="kpi-sub">Data quality score</div>
+            </div>
+          </div>
+          <div class="grid-3 mb-24" id="d-kpi-row2">
+            <div class="kpi green">
+              <div class="kpi-label">Emails Found</div>
+              <div class="kpi-value" id="d-emailpct">—</div>
+              <div class="kpi-sub">Contacts with email</div>
+            </div>
+            <div class="kpi accent">
+              <div class="kpi-label">LinkedIn Found</div>
+              <div class="kpi-value" id="d-linkedinpct">—</div>
+              <div class="kpi-sub">Verified + constructed</div>
+            </div>
+            <div class="kpi amber">
+              <div class="kpi-label">Phone Found</div>
+              <div class="kpi-value" id="d-phonepct">—</div>
+              <div class="kpi-sub">Direct + mobile</div>
+            </div>
+          </div>
+
+          <!-- SECTION 2: Enrichment Intelligence -->
+          <div class="section-head">Enrichment Intelligence</div>
+          <div class="grid-2 mb-24">
+            <div class="card" style="margin:0;">
+              <div style="font-size:11px;font-weight:700;color:var(--text-mid);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em;">Source Win Rates</div>
+              <div id="d-source-wins">
+                <div class="dash-loading"><div class="dash-loading-ring"></div> Loading sources…</div>
+              </div>
+              <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
+                <div style="font-size:11px;font-weight:700;color:var(--text-mid);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em;">Data Hit Rates</div>
+                <div id="d-hit-rates">
+                  <div class="dash-loading"><div class="dash-loading-ring"></div></div>
+                </div>
+              </div>
+            </div>
+            <div class="card" style="margin:0;">
+              <div style="font-size:11px;font-weight:700;color:var(--text-mid);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em;">ICP Score Distribution</div>
+              <div class="icp-dist" id="d-icp-dist">
+                <div class="icp-bar" style="height:10%"><div class="icp-tip">Loading…</div></div>
+                <div class="icp-bar" style="height:10%"></div><div class="icp-bar" style="height:10%"></div>
+                <div class="icp-bar" style="height:10%"></div><div class="icp-bar" style="height:10%"></div>
+                <div class="icp-bar" style="height:10%"></div><div class="icp-bar" style="height:10%"></div>
+                <div class="icp-bar" style="height:10%"></div><div class="icp-bar" style="height:10%"></div>
+                <div class="icp-bar" style="height:10%"></div>
+              </div>
+              <div class="icp-labels">
+                <span>0–9</span><span>10–19</span><span>20–29</span><span>30–39</span><span>40–49</span>
+                <span>50–59</span><span>60–69</span><span>70–79</span><span>80–89</span><span>90+</span>
+              </div>
+              <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
+                <div style="font-size:11px;font-weight:700;color:var(--text-mid);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em;">Contacts by Vertical</div>
+                <div id="d-verticals">
+                  <div class="dash-loading"><div class="dash-loading-ring"></div> Loading…</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 3: Pipeline Activity -->
+          <div class="section-head">Pipeline Activity</div>
+          <div class="grid-2-1 mb-24">
+            <div class="card" style="margin:0;">
+              <div style="font-size:11px;font-weight:700;color:var(--text-mid);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em;">Top 10 Contacts by ICP Score</div>
+              <div id="d-top-contacts">
+                <div class="dash-loading"><div class="dash-loading-ring"></div> Loading contacts…</div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              <div class="card" style="margin:0;">
+                <div style="font-size:11px;font-weight:700;color:var(--text-mid);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em;">Live Pipeline Queue</div>
+                <div id="d-queue">
+                  <div class="dash-loading"><div class="dash-loading-ring"></div></div>
+                </div>
+              </div>
+              <div class="card" style="margin:0;">
+                <div style="font-size:11px;font-weight:700;color:var(--text-mid);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em;">Recent Territory Runs</div>
+                <div id="d-territory-runs">
+                  <div class="dash-loading"><div class="dash-loading-ring"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 4: Outreach & Feedback -->
+          <div class="section-head">Outreach & Feedback Loops</div>
+          <div class="card mb-24" style="margin-bottom:24px;">
+            <div style="font-size:11px;font-weight:700;color:var(--text-mid);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em;">Outreach Pipeline</div>
+            <div id="d-outreach-summary">
+              <div class="outreach-mini-kpi">
+                <div class="omk"><div class="omk-val" id="d-oa-drafted">—</div><div class="omk-label">Drafted</div></div>
+                <div class="omk"><div class="omk-val" id="d-oa-approved">—</div><div class="omk-label">Approved</div></div>
+                <div class="omk"><div class="omk-val" id="d-oa-sent">—</div><div class="omk-label">Sent</div></div>
+                <div class="omk"><div class="omk-val" id="d-oa-replied">—</div><div class="omk-label">Replied</div></div>
+              </div>
+              <div class="empty-state" style="padding:14px;">
+                <div class="empty-icon">✉️</div>
+                <div class="empty-text">Outreach engine launches in Phase 3</div>
+                <div class="empty-sub">When built, this panel will show AI-drafted sequences, approval workflow, send tracking, and reply detection.</div>
+              </div>
+            </div>
+          </div>
+          <div class="grid-2 mb-24">
+            <div class="card" style="margin:0;">
+              <div style="font-size:11px;font-weight:700;color:var(--text-mid);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em;">Outcomes Tracker</div>
+              <div id="d-outcomes">
+                <div class="empty-state">
+                  <div class="empty-icon">🎯</div>
+                  <div class="empty-text">Outcomes tracking launches in Phase 2</div>
+                  <div class="empty-sub">Win rates, meeting bookings, and conversion data will appear here.</div>
+                </div>
+              </div>
+            </div>
+            <div class="card" style="margin:0;">
+              <div style="font-size:11px;font-weight:700;color:var(--text-mid);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em;">Feedback Summary</div>
+              <div id="d-feedback-summary">
+                <div class="dash-loading"><div class="dash-loading-ring"></div> Loading…</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 5: System Intelligence (admin only) -->
+          <div id="d-admin-section" style="display:none;" class="admin-only">
+            <div class="section-head">System Intelligence <span style="font-size:9px;font-weight:700;color:var(--accent);background:var(--accent-light);padding:2px 7px;border-radius:4px;letter-spacing:0.02em;margin-left:6px;">ADMIN</span></div>
+            <div class="grid-3 mb-24">
+              <div class="card" style="margin:0;">
+                <div style="font-size:11px;font-weight:700;color:var(--text-mid);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em;">Source Reliability Scores</div>
+                <div class="empty-state">
+                  <div class="empty-icon">🏆</div>
+                  <div class="empty-text">No source scores yet</div>
+                  <div class="empty-sub">Launches in Phase 2 Chunk 1.</div>
+                </div>
+              </div>
+              <div class="card" style="margin:0;">
+                <div style="font-size:11px;font-weight:700;color:var(--text-mid);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em;">ICP Version History</div>
+                <div class="empty-state">
+                  <div class="empty-icon">🧠</div>
+                  <div class="empty-text">No ICP versions yet</div>
+                  <div class="empty-sub">Dynamic ICP scoring launches in Phase 2 Chunk 3.</div>
+                </div>
+              </div>
+              <div class="card" style="margin:0;">
+                <div style="font-size:11px;font-weight:700;color:var(--text-mid);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em;">Weekly Intelligence</div>
+                <div class="empty-state">
+                  <div class="empty-icon">📋</div>
+                  <div class="empty-text">No reports yet</div>
+                  <div class="empty-sub">Weekly AI reports launch in Phase 2 Chunk 2.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Email Delivery -->
+          <div class="section-head">Email Delivery</div>
+          <div class="card mb-24" style="margin-bottom:24px;">
+            <div id="d-email-delivery">
+              <div class="dash-loading"><div class="dash-loading-ring"></div> Loading…</div>
+            </div>
+          </div>
+
+        </div><!-- end dashboard -->
+
+        <!-- ====== SINGLE COMPANY ====== -->
+        <div id="tab-single" class="tab-panel">
+          <div class="page-header">
+            <div class="page-title">Single Company</div>
+            <div class="page-sub">Enter one company to run through the full pipeline — scrape, enrich contacts, ICP score, and export to Google Sheets.</div>
+          </div>
+          <div class="card">
+            <div class="row-2">
+              <div class="field"><label>Company Name</label><input type="text" id="s-company" placeholder="Apex Behavioral Health"></div>
+              <div class="field"><label>Domain</label><input type="text" id="s-domain" placeholder="apexbh.com"></div>
+            </div>
+            <div class="field">
+              <label>Vertical</label>
+              <div class="chips" id="s-chips">
+                <button class="chip active" data-v="behavioral_health" onclick="selectChip(this,'s-chips')">Behavioral Health</button>
+                <button class="chip" data-v="construction" onclick="selectChip(this,'s-chips')">Construction</button>
+                <button class="chip" data-v="medical_transport" onclick="selectChip(this,'s-chips')">Medical Transport</button>
+                <button class="chip" data-v="b2b_professional_services" onclick="selectChip(this,'s-chips')">B2B Services</button>
+                <button class="chip" data-v="health_wellness" onclick="selectChip(this,'s-chips')">Health &amp; Wellness</button>
+                <button class="chip" data-v="home_services" onclick="selectChip(this,'s-chips')">Home Services</button>
+              </div>
+            </div>
+            <div class="field"><label>Scorer Notes <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label><input type="text" id="s-notes" placeholder="e.g. Multi-location, recently funded, 200+ employees"></div>
+            <div class="row-2">
+              <div class="field"><label>Your Name</label><input type="text" id="s-submitter-name" placeholder="Brian"></div>
+              <div class="field"><label>Your Email</label><input type="email" id="s-submitter-email" placeholder="brian@manageai.io"></div>
+            </div>
+            <button class="btn-primary" id="btn-single" onclick="submitSingle()">Run Lead Booster</button>
+          </div>
+          <div style="height:14px;"></div>
+          <div class="results-card" id="results-single">
+            <div id="results-single-list"></div>
+            <div class="summary-banner" id="summary-single" style="margin:0;border-radius:0;"></div>
+          </div>
+          <div style="height:14px;"></div>
+          <a href="https://docs.google.com/spreadsheets/d/1Vg5cHkFLFIxfS88l3gRymXgKWNJLhzIlt-3nkg2Z8k8/edit" target="_blank" class="sheet-link">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+            <div><div style="font-size:12px;font-weight:700;">Lead Booster Results Sheet</div><div style="font-size:10.5px;color:var(--text-dim);margin-top:1px;">Leads appear within 3–5 minutes · Sort by ICP Score column</div></div>
+            <div class="sheet-arrow">Open Google Sheets →</div>
+          </a>
+        </div>
+
+        <!-- ====== BULK UPLOAD ====== -->
+        <div id="tab-bulk" class="tab-panel">
+          <div class="page-header">
+            <div class="page-title">Bulk Upload</div>
+            <div class="page-sub">Upload a CSV or paste a company list. Each company runs the full enrichment pipeline. Maximum 50 companies per submission.</div>
+          </div>
+          <div class="card">
+            <div class="upload-area" id="drop-zone" onclick="document.getElementById('csv-input').click()" ondragover="handleDrag(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+              <input type="file" id="csv-input" class="upload-input" accept=".csv,.txt" onchange="handleFile(event)">
+              <div class="upload-icon">📄</div>
+              <div class="upload-title">Drop CSV here or click to browse</div>
+              <div class="upload-sub">Format: Company Name, domain.com · One per row · Max 50 rows</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin:0 0 12px;">
+              <div style="flex:1;height:1px;background:var(--border);"></div>
+              <span style="font-size:10px;font-weight:700;color:var(--text-dim);">OR PASTE BELOW</span>
+              <div style="flex:1;height:1px;background:var(--border);"></div>
+            </div>
+            <div class="field">
+              <label>Company List</label>
+              <textarea id="b-list" placeholder="Apex Behavioral Health, apexbh.com&#10;Cornerstone General Contractors, cornerstonegc.com&#10;SunState Medical Transport, sunstatenemt.com" oninput="updateBulkCount()"></textarea>
+              <div class="field-hint">Format: Company Name, domain.com — one per line</div>
+            </div>
+            <div class="limit-bar" id="bulk-limit-bar">
+              <div class="limit-label">Companies</div>
+              <div class="limit-track"><div class="limit-fill" id="bulk-fill" style="width:0%"></div></div>
+              <div class="limit-count ok" id="bulk-count">0 / 50</div>
+            </div>
+            <div class="field">
+              <label>Default Vertical</label>
+              <select id="b-vertical">
+                <option value="behavioral_health">Behavioral Health</option>
+                <option value="construction">Construction</option>
+                <option value="medical_transport">Medical Transport</option>
+                <option value="b2b_professional_services">B2B Professional Services</option>
+                <option value="health_wellness">Health &amp; Wellness</option>
+                <option value="home_services">Home Services</option>
+              </select>
+            </div>
+            <div class="row-2">
+              <div class="field"><label>Your Name</label><input type="text" id="b-submitter-name" placeholder="Brian"></div>
+              <div class="field"><label>Your Email</label><input type="email" id="b-submitter-email" placeholder="brian@manageai.io"></div>
+            </div>
+            <button class="btn-primary" id="btn-bulk" onclick="submitBulk()">Run Bulk Lead Booster</button>
+          </div>
+          <div style="height:14px;"></div>
+          <div class="results-card" id="results-bulk">
+            <div id="results-bulk-list"></div>
+            <div class="summary-banner" id="summary-bulk" style="margin:0;border-radius:0;"></div>
+          </div>
+        </div>
+
+        <!-- ====== TERRITORY SEARCH ====== -->
+        <div id="tab-territory" class="tab-panel">
+          <div class="page-header">
+            <div class="page-title">Territory Search</div>
+            <div class="page-sub">Search by city, state, and vertical. Lead Booster finds matching companies via Google Places, then auto-enriches the top results.</div>
+          </div>
+          <div class="card">
+            <div class="row-2">
+              <div class="field"><label>Target City</label><input type="text" id="t-city" placeholder="Phoenix"></div>
+              <div class="field"><label>State</label><input type="text" id="t-state" placeholder="AZ" maxlength="2" style="text-transform:uppercase;"></div>
+            </div>
+            <div class="field">
+              <label>Vertical</label>
+              <div class="chips" id="t-chips">
+                <button class="chip active" data-v="behavioral_health" onclick="selectChip(this,'t-chips')">Behavioral Health</button>
+                <button class="chip" data-v="construction" onclick="selectChip(this,'t-chips')">Construction</button>
+                <button class="chip" data-v="medical_transport" onclick="selectChip(this,'t-chips')">Medical Transport</button>
+                <button class="chip" data-v="b2b_professional_services" onclick="selectChip(this,'t-chips')">B2B Services</button>
+                <button class="chip" data-v="health_wellness" onclick="selectChip(this,'t-chips')">Health &amp; Wellness</button>
+                <button class="chip" data-v="home_services" onclick="selectChip(this,'t-chips')">Home Services</button>
+              </div>
+            </div>
+            <div class="row-2">
+              <div class="field">
+                <label>Max Results</label>
+                <select id="t-max">
+                  <option value="10">10 companies</option>
+                  <option value="20">20 companies</option>
+                  <option value="30">30 companies</option>
+                  <option value="50" selected>50 companies (max)</option>
+                </select>
+              </div>
+              <div class="field"><label>Keywords <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label><input type="text" id="t-keywords" placeholder="rehab, recovery, treatment"></div>
+            </div>
+            <div class="row-2">
+              <div class="field"><label>Your Name</label><input type="text" id="t-submitter-name" placeholder="Brian"></div>
+              <div class="field"><label>Your Email</label><input type="email" id="t-submitter-email" placeholder="brian@manageai.io"></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+              <button class="btn-search" id="btn-territory-search" onclick="searchTerritory()">🔍 Search Territory</button>
+              <div class="search-spinner" id="territory-spinner">
+                <div class="spinner-ring"></div>
+                <span>Searching Google Maps…</span>
+              </div>
+            </div>
+            <!-- Territory Preview -->
+            <div id="territory-preview" style="display:none;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <div style="font-size:10.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em;">Companies Found</div>
+                <div style="display:flex;gap:7px;align-items:center;">
+                  <span id="t-found-count" class="badge badge-blue">0 found</span>
+                  <button class="btn-secondary" style="font-size:10px;padding:4px 10px;" onclick="clearTerritoryResults()">Clear</button>
+                </div>
+              </div>
+              <div class="limit-bar" style="margin-bottom:10px;">
+                <div class="limit-label">Selected</div>
+                <div class="limit-track"><div class="limit-fill" id="t-fill" style="width:0%"></div></div>
+                <div class="limit-count ok" id="t-count">0 / 50</div>
+              </div>
+              <div class="preview-list" id="territory-list"></div>
+              <button class="btn-primary" id="btn-territory-run" style="margin-top:12px;display:none;" onclick="submitTerritory()">Run Lead Booster on Selected Companies</button>
+            </div>
+          </div>
+          <div style="height:14px;"></div>
+          <!-- Recent territory runs -->
+          <div class="card">
+            <div style="font-size:11px;font-weight:700;color:var(--text-mid);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em;">Recent Territory Runs</div>
+            <div id="t-recent-runs">
+              <div class="dash-loading"><div class="dash-loading-ring"></div> Loading…</div>
+            </div>
+          </div>
+          <div style="height:14px;"></div>
+          <div class="results-card" id="results-territory">
+            <div id="results-territory-list"></div>
+            <div class="summary-banner" id="summary-territory" style="margin:0;border-radius:0;"></div>
+          </div>
+        </div>
+
+        <!-- ====== OUTREACH (Phase 3 placeholder) ====== -->
+        <div id="tab-outreach" class="tab-panel">
+          <div class="page-header">
+            <div class="page-title">Outreach</div>
+          </div>
+          <div class="placeholder-section">
+            <div class="placeholder-icon">✉️</div>
+            <div class="placeholder-title">Outreach Engine — Coming in Phase 3</div>
+            <div class="placeholder-desc">When Phase 3 is built, this tab will show all contacts with ICP score 75+, their AI-drafted 3-step email sequences, approval workflow, send tracking, and reply detection.</div>
+          </div>
+        </div>
+
+        <!-- ====== INTELLIGENCE (Phase 2 placeholder) ====== -->
+        <div id="tab-intelligence" class="tab-panel">
+          <div class="page-header">
+            <div class="page-title">Intelligence</div>
+          </div>
+          <div class="placeholder-section">
+            <div class="placeholder-icon">📈</div>
+            <div class="placeholder-title">Intelligence Layer — Coming in Phase 2</div>
+            <div class="placeholder-desc">When Phase 2 is built, this tab will show source reliability rankings, top converting titles, ICP scoring accuracy, dynamic prompt versioning, and weekly AI-generated intelligence reports.</div>
+          </div>
+        </div>
+
+        <!-- ====== HISTORY ====== -->
+        <div id="tab-history" class="tab-panel">
+          <div class="page-header">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div class="page-title">History</div>
+                <div class="page-sub">All enriched contacts from lb_contacts, sorted by most recent.</div>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button class="export-btn" onclick="exportHistoryCSV()">⬇ Export CSV</button>
+                <button class="btn-icon" onclick="loadHistory()">↻ Refresh</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="search-bar-row">
+              <input type="text" class="search-input" id="hist-search" placeholder="Search by name or company…" oninput="filterHistory()">
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="hist-table" id="hist-table">
+                <thead><tr>
+                  <th>Name</th><th>Title</th><th>Company</th><th>Vertical</th>
+                  <th>ICP</th><th>Email</th><th>LinkedIn</th><th>Complete</th><th>Date</th>
+                </tr></thead>
+                <tbody id="hist-tbody"><tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text-dim);font-size:12px;">Loading contacts…</td></tr></tbody>
+              </table>
+            </div>
+            <div class="pagination" id="hist-pagination">
+              <div class="page-info" id="hist-page-info">Loading…</div>
+              <div class="page-btns">
+                <button class="page-btn" id="hist-prev" onclick="histPage(-1)" disabled>← Prev</button>
+                <button class="page-btn" id="hist-next" onclick="histPage(1)" disabled>Next →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ====== SETTINGS ====== -->
+        <div id="tab-settings" class="tab-panel">
+          <div class="page-header">
+            <div class="page-title">Settings</div>
+            <div class="page-sub">Your profile and system configuration.</div>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title">My Profile</div>
+              <div class="card-sub">Your account details.</div>
+              <div class="field"><label>Display Name</label><input type="text" id="set-name" placeholder="Brian"></div>
+              <div class="field"><label>Email</label><input type="text" id="set-email" readonly style="opacity:0.6;cursor:not-allowed;"></div>
+              <div class="field">
+                <label>Role</label>
+                <div style="padding:9px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:11px;font-weight:700;color:var(--text-mid);">
+                  <span id="set-role-badge">—</span>
+                </div>
+              </div>
+            </div>
+            <div class="card" id="set-admin-panel">
+              <div class="card-title">System</div>
+              <div class="card-sub">Infrastructure configuration.</div>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div style="background:var(--surface);border-radius:var(--radius);padding:10px 12px;">
+                  <div style="font-size:9.5px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;">n8n Instance</div>
+                  <div style="font-family:var(--mono);font-size:10.5px;color:var(--text);">manageai2026.app.n8n.cloud</div>
+                </div>
+                <div style="background:var(--surface);border-radius:var(--radius);padding:10px 12px;">
+                  <div style="font-size:9.5px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;">Supabase Project</div>
+                  <div style="font-family:var(--mono);font-size:10.5px;color:var(--text);">palcqjfgygpidzwjzikn.supabase.co</div>
+                </div>
+                <a href="https://docs.google.com/spreadsheets/d/1Vg5cHkFLFIxfS88l3gRymXgKWNJLhzIlt-3nkg2Z8k8/edit" target="_blank" style="background:var(--surface);border-radius:var(--radius);padding:10px 12px;display:block;text-decoration:none;">
+                  <div style="font-size:9.5px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;">Google Sheets</div>
+                  <div style="font-size:10.5px;color:var(--accent);font-weight:600;">Open Results Sheet →</div>
+                </a>
+                <div style="background:var(--surface);border-radius:var(--radius);padding:10px 12px;">
+                  <div style="font-size:9.5px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;">Current ICP Version</div>
+                  <div style="font-size:10.5px;color:var(--text-mid);font-weight:600;">v1 — Default · <a href="#" onclick="setTab('intelligence');return false;" style="color:var(--accent);">View in Intelligence tab →</a></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ====== FEEDBACK ====== -->
+        <div id="tab-feedback" class="tab-panel">
+          <div class="page-header">
+            <div class="page-title">Feedback</div>
+            <div class="page-sub">Help us improve Lead Booster Pro. Your feedback goes directly to the ManageAI team.</div>
+          </div>
+          <div class="card" style="max-width:640px;">
+            <div class="field"><label>Your Name</label><input type="text" id="fb-name-field" placeholder="Brian"></div>
+            <div class="field">
+              <label>Category</label>
+              <select id="fb-category">
+                <option value="">Select a category…</option>
+                <option value="data_quality">Data Quality — emails, phones, LinkedIn</option>
+                <option value="icp_scoring">ICP Scoring — scores feel off</option>
+                <option value="territory_search">Territory Search — wrong companies returned</option>
+                <option value="speed">Speed — pipeline too slow</option>
+                <option value="missing_feature">Missing Feature — something I need</option>
+                <option value="bug">Bug — something broke</option>
+                <option value="general">General — other feedback</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Rating</label>
+              <div style="display:flex;gap:7px;margin-top:4px;" id="fb-stars-row">
+                <span class="fb-star" data-val="1" onclick="setRating(1)">★</span>
+                <span class="fb-star" data-val="2" onclick="setRating(2)">★</span>
+                <span class="fb-star" data-val="3" onclick="setRating(3)">★</span>
+                <span class="fb-star" data-val="4" onclick="setRating(4)">★</span>
+                <span class="fb-star" data-val="5" onclick="setRating(5)">★</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>Message <span style="font-weight:400;text-transform:none;letter-spacing:0;">(be specific — more detail = better fix)</span></label>
+              <textarea id="fb-message" placeholder="Example: Phoenix AZ behavioral health search returned ICP scores lower than expected for directors. Phone numbers mostly missing."></textarea>
+            </div>
+            <div class="field"><label>Reference <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label><input type="text" id="fb-reference" placeholder="e.g. Adelante Healthcare, run March 10"></div>
+            <div id="fb-success" style="display:none;background:var(--green-light);color:var(--green);padding:12px 14px;border-radius:var(--radius);font-size:12px;font-weight:600;margin-bottom:12px;">✅ Feedback sent — Brian will review it shortly.</div>
+            <div id="fb-error-msg" style="display:none;background:var(--red-light);color:var(--red);padding:12px 14px;border-radius:var(--radius);font-size:12px;font-weight:600;margin-bottom:12px;">Something went wrong. Please try again.</div>
+            <button class="btn-primary" id="btn-feedback" onclick="submitFeedback()">Send Feedback</button>
+          </div>
+          <div style="height:20px;"></div>
+          <!-- Recent feedback submissions -->
+          <div class="card" style="max-width:640px;">
+            <div style="font-size:11px;font-weight:700;color:var(--text-mid);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em;">Recent Submissions</div>
+            <div id="recent-feedback-list">
+              <div class="dash-loading"><div class="dash-loading-ring"></div> Loading…</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end main-inner -->
+
+      <!-- FOOTER -->
+      <div class="main-footer">
+        <div style="display:flex;align-items:center;gap:5px;">
+          <span class="footer-brand"><span class="m">MANAGE</span><span class="ai">AI</span></span>
+          <span>· Lead Booster Pro v3.0 · March 2026</span>
+        </div>
+        <div class="footer-conf">CONFIDENTIAL — INTERNAL USE ONLY</div>
+      </div>
+    </div><!-- end main-content -->
+  </div><!-- end app-layout -->
+
+  <!-- STICKY QUICK ACTIONS -->
+  <div class="quick-actions">
+    <span class="qa-label">Quick Actions</span>
+    <button class="btn-icon" onclick="loadDashboard()">🔄 Refresh Dashboard</button>
+    <a href="https://docs.google.com/spreadsheets/d/1Vg5cHkFLFIxfS88l3gRymXgKWNJLhzIlt-3nkg2Z8k8/edit" target="_blank" class="btn-icon">📊 Open Google Sheet</a>
+    <button class="btn-icon" onclick="setTab('single')">▶ New Single Run</button>
+    <button class="btn-icon" onclick="setTab('territory')">🗺 Territory Search</button>
+  </div>
+</div><!-- end app-wrapper -->
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const SB_URL  = "https://palcqjfgygpidzwjzikn.supabase.co";
+const SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhbGNxamZneWdwaWR6d2p6aWtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3ODE1MzcsImV4cCI6MjA4ODM1NzUzN30.-8yi1QepliAdMhgARQhId93Ny-M0skqaDHgOevM3Zro";
+const SB_SVC  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhbGNxamZneWdwaWR6d2p6aWtuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjc4MTUzNywiZXhwIjoyMDg4MzU3NTM3fQ.ojp5xMRnHy_GQ8ImmFG-PMlYcYw78kh7Cftp26u3CsA";
+const WEBHOOK       = "https://manageai2026.app.n8n.cloud/webhook/lb-discovery";
+const WEBHOOK_TERR  = "https://manageai2026.app.n8n.cloud/webhook/lb-territory-v2";
+const MAX_CO = 50;
+
+// ============================================================
+// SUPABASE HELPERS
+// ============================================================
+async function sbGet(path, svc=true) {
+  try {
+    const key = svc ? SB_SVC : SB_ANON;
+    const r = await fetch(SB_URL+'/rest/v1/'+path, {
+      headers: {'apikey':key,'Authorization':'Bearer '+key,'Content-Type':'application/json'}
+    });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch { return null; }
+}
+
+async function sbPost(path, body, svc=false) {
+  try {
+    const key = svc ? SB_SVC : SB_ANON;
+    const r = await fetch(SB_URL+'/rest/v1/'+path, {
+      method:'POST',
+      headers: {'apikey':key,'Authorization':'Bearer '+(window._authToken||key),'Content-Type':'application/json','Prefer':'return=representation'},
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch { return null; }
+}
+
+// ============================================================
+// NAV / TABS
+// ============================================================
+let currentTab = 'dashboard';
+function setTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const p = document.getElementById('tab-'+tab);
+  if (p) p.classList.add('active');
+  const n = document.getElementById('nav-'+tab);
+  if (n) n.classList.add('active');
+  if (tab === 'dashboard') loadDashboard();
+  if (tab === 'history') { loadHistory(); loadTerritoryRuns('t-recent-runs'); }
+  if (tab === 'territory') loadTerritoryRuns('t-recent-runs');
+  if (tab === 'feedback') { loadRecentFeedback(); }
+  if (tab === 'settings') populateSettings();
+}
+
+// ============================================================
+// UTILITY
+// ============================================================
+function safeSet(id, val) { const e=document.getElementById(id); if(e) e.textContent=val; }
+function setBarWidth(id, pct) { const e=document.getElementById(id); if(e) e.style.width=Math.min(pct,100)+'%'; }
+function selectChip(el, gid) {
+  document.querySelectorAll('#'+gid+' .chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+}
+function getActiveChip(gid) {
+  const a=document.querySelector('#'+gid+' .chip.active');
+  return a ? a.dataset.v : 'behavioral_health';
+}
+
+function logout() {
+  window._currentUser=null; window._authToken=null;
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('app-wrapper').style.display='none';
+  document.getElementById('login-password').value='';
+  document.getElementById('btn-login').textContent='Login';
+}
+
+function fmtDate(d) {
+  if(!d) return '—';
+  return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+
+// ============================================================
+// CHIPS / FORMS
+// ============================================================
+function updateBulkCount() {
+  const lines = parseBulkLines();
+  const count = Math.min(lines.length, MAX_CO);
+  const pct = (count/MAX_CO)*100;
+  const fill = document.getElementById('bulk-fill');
+  const cnt = document.getElementById('bulk-count');
+  cnt.textContent = count+' / '+MAX_CO;
+  fill.style.width = pct+'%';
+  if(count>=MAX_CO){ cnt.className='limit-count over'; fill.className='limit-fill over'; }
+  else if(count>=40){ cnt.className='limit-count warn'; fill.className='limit-fill warn'; }
+  else { cnt.className='limit-count ok'; fill.className='limit-fill'; }
+}
+function parseBulkLines() {
+  const raw = document.getElementById('b-list').value.trim();
+  if(!raw) return [];
+  return raw.split('\n').map(l=>l.trim()).filter(l=>l&&l.includes(','));
+}
+
+// ============================================================
+// CSV UPLOAD
+// ============================================================
+function handleDrag(e){ e.preventDefault(); document.getElementById('drop-zone').classList.add('drag'); }
+function handleDragLeave(){ document.getElementById('drop-zone').classList.remove('drag'); }
+function handleDrop(e){ e.preventDefault(); document.getElementById('drop-zone').classList.remove('drag'); const f=e.dataTransfer.files[0]; if(f) readCSV(f); }
+function handleFile(e){ const f=e.target.files[0]; if(f) readCSV(f); }
+function readCSV(file){
+  const r=new FileReader();
+  r.onload=e=>{
+    const lines=e.target.result.split('\n').filter(l=>l.trim());
+    const cleaned=lines.filter(l=>!l.toLowerCase().startsWith('company')).join('\n');
+    document.getElementById('b-list').value=cleaned;
+    updateBulkCount();
+  };
+  r.readAsText(file);
+}
+
+// ============================================================
+// WEBHOOK + PIPELINE
+// ============================================================
+async function fireWebhook(company, domain, vertical, notes, submitterName, submitterEmail) {
+  const r = await fetch(WEBHOOK, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({company,domain,vertical,notes:notes||'',submitter_name:submitterName||'',submitter_email:submitterEmail||''})
+  });
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return r.json();
+}
+
+async function runLeads(leads, mode, submitterName, submitterEmail, resultsCardId, resultsListId, summaryId, btnId) {
+  if(!leads.length) return;
+  const rc = document.getElementById(resultsCardId);
+  const rl = document.getElementById(resultsListId);
+  const sb = document.getElementById(summaryId);
+  const btn = document.getElementById(btnId);
+  if(rc) rc.classList.add('show');
+  if(rl) rl.innerHTML='';
+  if(sb){ sb.style.display='none'; sb.className='summary-banner'; }
+  if(btn){ btn.disabled=true; btn.textContent='Submitting…'; }
+
+  // Log to lb_requests
+  await sbPost('lb_requests', {
+    mode, companies:leads, company_count:leads.length, status:'submitted',
+    submitted_by:submitterName||submitterEmail||'ui',
+    submitter_name:submitterName||'', submitter_email:submitterEmail||''
+  }, false);
+
+  let ok=0, fail=0;
+  for(let i=0;i<leads.length;i++){
+    const l=leads[i];
+    addResultRow(rl, i, l.company, l.domain, 'pending', 'Queued…');
+  }
+  for(let i=0;i<leads.length;i++){
+    const l=leads[i];
+    updateResultRow(rl, i, 'pending', 'Submitting…');
+    try {
+      await fireWebhook(l.company, l.domain, l.vertical, l.notes, submitterName, submitterEmail);
+      updateResultRow(rl, i, 'ok', '✓ Pipeline started');
+      ok++;
+    } catch(e){
+      updateResultRow(rl, i, 'err', '✗ '+e.message);
+      fail++;
+    }
+    if(i<leads.length-1) await new Promise(r=>setTimeout(r,350));
+  }
+  if(sb){
+    sb.style.display='block';
+    if(fail===0){ sb.classList.add('show','success'); sb.textContent='✓ '+ok+' compan'+(ok===1?'y':'ies')+' submitted — results in Google Sheets in 3–5 minutes'; }
+    else{ sb.classList.add('show','error'); sb.textContent=ok+' submitted, '+fail+' failed — check connection and retry'; }
+  }
+  if(btn){ btn.disabled=false; btn.textContent=mode==='single'?'Run Lead Booster':mode==='bulk'?'Run Bulk Lead Booster':'Run Lead Booster on Selected Companies'; }
+}
+
+function addResultRow(listEl, id, company, domain, state, msg){
+  const d=document.createElement('div'); d.className='result-row'; d.id='rr-'+id;
+  d.innerHTML=`<div class="status-dot ${state}"></div><div><div class="result-co">${company}</div><div class="result-dom">${domain}</div></div><div class="result-status ${state}" id="rs-${id}">${msg}</div>`;
+  listEl.appendChild(d);
+}
+function updateResultRow(listEl, id, state, msg){
+  const dot=listEl.querySelector('#rr-'+id+' .status-dot');
+  const st=listEl.querySelector('#rs-'+id);
+  if(dot){ dot.className='status-dot '+state; }
+  if(st){ st.className='result-status '+state; st.textContent=msg; }
+}
+
+// ============================================================
+// SINGLE SUBMIT
+// ============================================================
+function submitSingle(){
+  const company=document.getElementById('s-company').value.trim();
+  const domain=document.getElementById('s-domain').value.trim().replace(/^https?:\/\//,'').replace(/\/$/,'');
+  if(!company||!domain){ alert('Please enter both a company name and domain.'); return; }
+  const vertical=getActiveChip('s-chips');
+  const notes=document.getElementById('s-notes').value.trim();
+  const sn=document.getElementById('s-submitter-name').value.trim();
+  const se=document.getElementById('s-submitter-email').value.trim();
+  runLeads([{company,domain,vertical,notes}],'single',sn,se,'results-single','results-single-list','summary-single','btn-single');
+}
+
+// ============================================================
+// BULK SUBMIT
+// ============================================================
+function submitBulk(){
+  const lines=parseBulkLines().slice(0,MAX_CO);
+  if(!lines.length){ alert('Please enter at least one company.\nFormat: Company Name, domain.com'); return; }
+  const vertical=document.getElementById('b-vertical').value;
+  const sn=document.getElementById('b-submitter-name').value.trim();
+  const se=document.getElementById('b-submitter-email').value.trim();
+  const leads=lines.map(l=>{ const p=l.split(',').map(s=>s.trim()); return {company:p[0],domain:(p[1]||'').replace(/^https?:\/\//,'').replace(/\/$/,''),vertical,notes:''}; }).filter(l=>l.company&&l.domain);
+  if(!leads.length){ alert('No valid entries. Format: Company Name, domain.com'); return; }
+  runLeads(leads,'bulk',sn,se,'results-bulk','results-bulk-list','summary-bulk','btn-bulk');
+}
+
+// ============================================================
+// TERRITORY
+// ============================================================
+let territoryResults=[];
+async function searchTerritory(){
+  const city=document.getElementById('t-city').value.trim();
+  const state=document.getElementById('t-state').value.trim().toUpperCase();
+  const vertical=getActiveChip('t-chips');
+  const max=parseInt(document.getElementById('t-max').value);
+  const keywords=document.getElementById('t-keywords').value.trim();
+  if(!city||!state){ alert('Please enter a city and state.'); return; }
+  document.getElementById('btn-territory-search').disabled=true;
+  document.getElementById('territory-spinner').classList.add('show');
+  document.getElementById('territory-preview').style.display='none';
+  territoryResults=[];
+  try {
+    const r=await fetch(WEBHOOK_TERR,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({city,state,vertical,max_results:max,keywords})});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    const companies=data.companies||data.results||[];
+    territoryResults=companies.slice(0,MAX_CO);
+    renderTerritoryPreview(vertical);
+    if(territoryResults.length>0){
+      const sn=document.getElementById('t-submitter-name').value.trim();
+      const se=document.getElementById('t-submitter-email').value.trim();
+      const leads=territoryResults.map(co=>({company:co.company,domain:co.domain||'',vertical:co.vertical||vertical,notes:'Territory: '+city+', '+state})).filter(l=>l.company&&l.domain);
+      if(leads.length>0) setTimeout(()=>runLeads(leads,'territory',sn,se,'results-territory','results-territory-list','summary-territory','btn-territory-run'),500);
+    }
+  } catch(err){
+    document.getElementById('territory-spinner').classList.remove('show');
+    document.getElementById('btn-territory-search').disabled=false;
+    alert('Territory Search error: '+err.message+'\n\nMake sure WF-11 is active in n8n.');
+    return;
+  }
+  document.getElementById('territory-spinner').classList.remove('show');
+  document.getElementById('btn-territory-search').disabled=false;
+}
+
+function renderTerritoryPreview(vertical){
+  document.getElementById('territory-preview').style.display='block';
+  document.getElementById('t-found-count').textContent=territoryResults.length+' found';
+  document.getElementById('t-count').textContent=territoryResults.length+' / '+MAX_CO;
+  document.getElementById('t-fill').style.width=((territoryResults.length/MAX_CO)*100)+'%';
+  const list=document.getElementById('territory-list');
+  list.innerHTML='';
+  if(!territoryResults.length){ list.innerHTML='<div class="preview-item" style="color:var(--text-dim);">No companies found.</div>'; document.getElementById('btn-territory-run').style.display='none'; return; }
+  territoryResults.forEach(co=>{
+    const row=document.createElement('div'); row.className='preview-item';
+    row.innerHTML=`<div class="preview-check"><svg viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5"/></svg></div><div><div style="font-size:11.5px;font-weight:700;">${co.company}</div>${co.address?'<div style="font-size:9.5px;color:var(--text-dim);">'+co.address+'</div>':''}</div><span class="preview-domain">${co.domain||'—'}</span><span class="preview-badge">${vertical.replace(/_/g,' ')}</span>`;
+    list.appendChild(row);
+  });
+  document.getElementById('btn-territory-run').style.display='block';
+}
+
+function clearTerritoryResults(){ territoryResults=[]; document.getElementById('territory-preview').style.display='none'; }
+
+function submitTerritory(){
+  if(!territoryResults.length) return;
+  const leads=territoryResults.map(co=>({company:co.company,domain:co.domain||'',vertical:co.vertical||getActiveChip('t-chips'),notes:'Territory: '+document.getElementById('t-city').value+', '+document.getElementById('t-state').value})).filter(l=>l.company);
+  const sn=document.getElementById('t-submitter-name').value.trim();
+  const se=document.getElementById('t-submitter-email').value.trim();
+  runLeads(leads,'territory',sn,se,'results-territory','results-territory-list','summary-territory','btn-territory-run');
+}
+
+async function loadTerritoryRuns(elId){
+  const el=document.getElementById(elId);
+  if(!el) return;
+  const runs=await sbGet('lb_territory_searches?select=*&order=created_at.desc&limit=5');
+  if(!runs||!runs.length){ el.innerHTML='<div class="empty-state"><div class="empty-icon">🗺️</div><div class="empty-text">No territory runs yet</div></div>'; return; }
+  el.innerHTML=runs.map(r=>`<div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:11px;"><div style="font-weight:700;color:var(--text);">${r.city||'—'}, ${r.state||'—'} · ${(r.vertical||'').replace(/_/g,' ')}</div><div style="color:var(--text-dim);font-weight:500;">${r.company_count||0} companies · ${fmtDate(r.created_at)}</div></div>`).join('');
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+let _contacts=null, _dashLoaded=false;
+
+async function loadDashboard(){
+  const [contacts, queue, notifications, territory] = await Promise.all([
+    sbGet('lb_contacts?select=id,first_name,last_name,company_name,title,email,phone,linkedin_url,email_source,phone_source,linkedin_source,vertical,icp_score,final_completeness_score,created_at&order=created_at.desc&limit=1000'),
+    sbGet('lb_queue?select=id,company_name,domain,status,submitter_name,mode,created_at&order=created_at.desc&limit=10'),
+    sbGet('lb_notifications?select=*&order=created_at.desc&limit=10'),
+    sbGet('lb_territory_searches?select=*&order=created_at.desc&limit=5')
+  ]);
+  _contacts = contacts || [];
+  if(_contacts.length) {
+    renderKPIs(_contacts);
+    renderHitRates(_contacts);
+    renderSourceWins(_contacts);
+    renderICPDist(_contacts);
+    renderVerticals(_contacts);
+    renderTopContacts(_contacts);
+  }
+  renderQueue(queue||[]);
+  renderEmailDelivery(notifications||[]);
+  renderTerritoryRunsDash(territory||[]);
+  loadFeedbackSummary();
+  _dashLoaded=true;
+  // Show admin section
+  if(window._currentUser && window._currentUser.role==='admin'){
+    const el=document.getElementById('d-admin-section');
+    if(el) el.style.display='block';
+  }
+}
+
+function renderKPIs(c){
+  const today=new Date().toISOString().split('T')[0];
+  const todayCt=c.filter(x=>x.created_at&&x.created_at.startsWith(today)).length;
+  const withIcp=c.filter(x=>x.icp_score!=null);
+  const avgIcp=withIcp.length?Math.round(withIcp.reduce((s,x)=>s+(x.icp_score||0),0)/withIcp.length):0;
+  const withComp=c.filter(x=>x.final_completeness_score!=null);
+  const avgComp=withComp.length?Math.round(withComp.reduce((s,x)=>s+(x.final_completeness_score||0),0)/withComp.length):0;
+  const emailPct=c.length?Math.round((c.filter(x=>x.email&&x.email.trim()!=='').length/c.length)*100):0;
+  const linkedinPct=c.length?Math.round((c.filter(x=>x.linkedin_url&&x.linkedin_url.trim()!=='').length/c.length)*100):0;
+  const phonePct=c.length?Math.round((c.filter(x=>x.phone&&x.phone.trim()!=='').length/c.length)*100):0;
+  safeSet('d-total', c.length.toLocaleString());
+  safeSet('d-today', todayCt.toLocaleString());
+  safeSet('d-avgicp', avgIcp||'—');
+  safeSet('d-avgcomp', avgComp?avgComp+'%':'—');
+  safeSet('d-emailpct', emailPct+'%');
+  safeSet('d-linkedinpct', linkedinPct+'%');
+  safeSet('d-phonepct', phonePct+'%');
+}
+
+function renderHitRates(c){
+  if(!c.length) return;
+  const emailPct=Math.round((c.filter(x=>x.email&&x.email.trim()!=='').length/c.length)*100);
+  const phonePct=Math.round((c.filter(x=>x.phone&&x.phone.trim()!=='').length/c.length)*100);
+  const linkedinPct=Math.round((c.filter(x=>x.linkedin_url&&x.linkedin_url.trim()!=='').length/c.length)*100);
+  const el=document.getElementById('d-hit-rates');
+  if(!el) return;
+  el.innerHTML=`
+    <div class="bar-row"><div class="bar-label">Email</div><div class="bar-track"><div class="bar-fill email" style="width:${emailPct}%"></div></div><div class="bar-pct">${emailPct}%</div></div>
+    <div class="bar-row"><div class="bar-label">Phone</div><div class="bar-track"><div class="bar-fill phone" style="width:${phonePct}%"></div></div><div class="bar-pct">${phonePct}%</div></div>
+    <div class="bar-row"><div class="bar-label">LinkedIn</div><div class="bar-track"><div class="bar-fill linkedin" style="width:${linkedinPct}%"></div></div><div class="bar-pct">${linkedinPct}%</div></div>
+  `;
+}
+
+function renderSourceWins(c){
+  const wins={hunter:0,apollo:0,pdl:0,website:0,snovio:0,unknown:0};
+  c.forEach(x=>{
+    const src=(x.email_source||'').toLowerCase();
+    if(src.includes('hunter')) wins.hunter++;
+    else if(src.includes('apollo')) wins.apollo++;
+    else if(src.includes('pdl')||src.includes('people')) wins.pdl++;
+    else if(src.includes('web')||src.includes('site')) wins.website++;
+    else if(src.includes('snov')) wins.snovio++;
+    else if(src) wins.unknown++;
+  });
+  const maxW=Math.max(...Object.values(wins),1);
+  const el=document.getElementById('d-source-wins');
+  if(!el) return;
+  const sources=[{key:'hunter',label:'Hunter',color:'#F59E0B'},{key:'apollo',label:'Apollo',color:'#7C3AED'},{key:'pdl',label:'PDL',color:'#059669'},{key:'website',label:'Website',color:'#4A8FD6'},{key:'snovio',label:'Snov.io',color:'#EC4899'}];
+  el.innerHTML=sources.map(s=>`
+    <div class="src-row">
+      <div class="src-pill ${s.key}">${s.label}</div>
+      <div class="src-track"><div class="src-fill" style="width:${Math.round((wins[s.key]/maxW)*100)}%;background:${s.color};"></div></div>
+      <div class="src-num">${wins[s.key]}</div>
+    </div>
+  `).join('');
+}
+
+function renderICPDist(c){
+  const buckets=Array(10).fill(0);
+  c.filter(x=>x.icp_score!=null).forEach(x=>{ const b=Math.min(Math.floor((x.icp_score||0)/10),9); buckets[b]++; });
+  const maxB=Math.max(...buckets,1);
+  const labels=['0–9','10–19','20–29','30–39','40–49','50–59','60–69','70–79','80–89','90+'];
+  const bars=document.querySelectorAll('#d-icp-dist .icp-bar');
+  bars.forEach((bar,i)=>{
+    const h=Math.max(Math.round((buckets[i]/maxB)*100),4);
+    bar.style.height=h+'%';
+    bar.style.background=i>=8?'var(--green)':i>=5?'var(--accent)':'var(--accent-light)';
+    let tip=bar.querySelector('.icp-tip');
+    if(!tip){ tip=document.createElement('div'); tip.className='icp-tip'; bar.appendChild(tip); }
+    tip.textContent=labels[i]+': '+buckets[i];
+  });
+}
+
+function renderVerticals(c){
+  const counts={};
+  c.forEach(x=>{ if(x.vertical) counts[x.vertical]=(counts[x.vertical]||0)+1; });
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const max=sorted[0]?.[1]||1;
+  const el=document.getElementById('d-verticals');
+  if(!el) return;
+  if(!sorted.length){ el.innerHTML='<div class="empty-state" style="padding:10px;"><div class="empty-text">No data yet</div></div>'; return; }
+  el.innerHTML=sorted.map(([v,n])=>`
+    <div class="vert-row">
+      <div class="vert-label">${v.replace(/_/g,' ')}</div>
+      <div class="vert-track"><div class="vert-fill" style="width:${Math.round((n/max)*100)}%"></div></div>
+      <div class="vert-num">${n}</div>
+    </div>
+  `).join('');
+}
+
+function renderTopContacts(c){
+  const el=document.getElementById('d-top-contacts');
+  if(!el) return;
+  const top=c.filter(x=>x.icp_score).sort((a,b)=>(b.icp_score||0)-(a.icp_score||0)).slice(0,10);
+  if(!top.length){ el.innerHTML='<div class="empty-state"><div class="empty-icon">🏆</div><div class="empty-text">No scored contacts yet</div></div>'; return; }
+  el.innerHTML=top.map((x,i)=>{
+    const score=x.icp_score||0;
+    const cls=score>=75?'high':score>=50?'mid':'low';
+    const name=[x.first_name,x.last_name].filter(Boolean).join(' ')||'Unknown';
+    return `<div class="lead-row">
+      <div class="lead-rank">${i+1}</div>
+      <div class="lead-info">
+        <div class="lead-name">${name}</div>
+        <div class="lead-co">${x.company_name||'—'} · ${x.title||'—'}</div>
+      </div>
+      <span class="lead-vert">${(x.vertical||'').replace(/_/g,' ')}</span>
+      <div class="lead-score ${cls}">${score}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderQueue(queue){
+  const el=document.getElementById('d-queue');
+  if(!el) return;
+  if(!queue.length){ el.innerHTML='<div class="empty-state" style="padding:12px;"><div class="empty-text">Queue empty</div></div>'; return; }
+  el.innerHTML=`<table class="q-table">
+    <thead><tr><th>Company</th><th>Mode</th><th>Status</th></tr></thead>
+    <tbody>${queue.slice(0,8).map(r=>{
+      const st=(r.status||'unknown').toLowerCase();
+      return `<tr>
+        <td style="font-weight:700;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.company_name||'—'}</td>
+        <td>${r.mode||'—'}</td>
+        <td><span class="status-chip ${st}"><div class="status-chip-dot"></div>${st}</span></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+
+function renderEmailDelivery(notifications){
+  const el=document.getElementById('d-email-delivery');
+  if(!el) return;
+  if(!notifications.length){ el.innerHTML='<div class="empty-state" style="padding:12px;"><div class="empty-text">No emails yet</div></div>'; return; }
+  const sent=notifications.filter(n=>{const s=(n.sent||n.status||'').toString().toLowerCase(); return s==='true'||s==='sent'||s==='delivered';}).length;
+  const pending=notifications.length-sent;
+  const pct=notifications.length?Math.round((sent/notifications.length)*100):0;
+  const last=notifications[0];
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;">
+      <div style="text-align:center;">
+        <div style="font-size:22px;font-weight:800;font-family:var(--mono);color:var(--green);">${sent}</div>
+        <div style="font-size:9px;font-weight:700;color:var(--text-dim);text-transform:uppercase;">Sent</div>
+      </div>
+      <div style="flex:1;height:7px;background:var(--surface2);border-radius:4px;overflow:hidden;">
+        <div style="height:100%;width:${pct}%;background:var(--green);border-radius:4px;transition:width 0.8s;"></div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:22px;font-weight:800;font-family:var(--mono);color:var(--text-dim);">${pending}</div>
+        <div style="font-size:9px;font-weight:700;color:var(--text-dim);text-transform:uppercase;">Pending</div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--text-dim);font-weight:500;">📧 Last: ${last.subject?last.subject.substring(0,55):'No subject'}</div>
+  `;
+}
+
+function renderTerritoryRunsDash(runs){
+  const el=document.getElementById('d-territory-runs');
+  if(!el) return;
+  if(!runs.length){ el.innerHTML='<div class="empty-state" style="padding:12px;"><div class="empty-text">No territory runs yet</div></div>'; return; }
+  el.innerHTML=runs.map(r=>`<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:10.5px;"><div style="font-weight:700;color:var(--text);">${r.city||'—'}, ${r.state||'—'}</div><div style="color:var(--text-dim);">${(r.vertical||'').replace(/_/g,' ')} · ${fmtDate(r.created_at)}</div></div>`).join('');
+}
+
+async function loadFeedbackSummary(){
+  const el=document.getElementById('d-feedback-summary');
+  if(!el) return;
+  const fb=await sbGet('lb_feedback?select=id,category,rating,name,message,submitted_at&order=submitted_at.desc&limit=50');
+  if(!fb||!fb.length){ el.innerHTML='<div class="empty-state"><div class="empty-icon">💬</div><div class="empty-text">No feedback yet</div></div>'; return; }
+  const total=fb.length;
+  const avgRating=(fb.filter(x=>x.rating).reduce((s,x)=>s+(x.rating||0),0)/Math.max(fb.filter(x=>x.rating).length,1)).toFixed(1);
+  const cats={};
+  fb.forEach(x=>{ if(x.category) cats[x.category]=(cats[x.category]||0)+1; });
+  const last=fb[0];
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">
+      <div><div style="font-size:22px;font-weight:800;font-family:var(--mono);color:var(--text);">${total}</div><div style="font-size:9px;font-weight:700;color:var(--text-dim);text-transform:uppercase;">Total</div></div>
+      <div><div style="font-size:22px;font-weight:800;font-family:var(--mono);color:var(--amber);">${avgRating}★</div><div style="font-size:9px;font-weight:700;color:var(--text-dim);text-transform:uppercase;">Avg Rating</div></div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;">
+      ${Object.entries(cats).map(([cat,n])=>`<span style="padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;background:var(--accent-light);color:var(--accent);">${cat.replace(/_/g,' ')} (${n})</span>`).join('')}
+    </div>
+    ${last?`<div style="font-size:10.5px;color:var(--text-mid);border-top:1px solid var(--border);padding-top:8px;"><span style="font-weight:700;">${last.name||'Anonymous'}</span> · ${last.category||'general'} · ${last.rating||'—'}★<br><span style="color:var(--text-dim);">${(last.message||'').substring(0,80)}…</span></div>`:''}
+    <div style="margin-top:8px;"><button class="btn-icon" style="font-size:10px;padding:4px 10px;" onclick="setTab('feedback')">View All →</button></div>
+  `;
+}
+
+// ============================================================
+// HISTORY
+// ============================================================
+let _histAll=[], _histFiltered=[], _histPage=0;
+const HIST_PAGE_SIZE=25;
+
+async function loadHistory(){
+  const tbody=document.getElementById('hist-tbody');
+  if(tbody) tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text-dim);font-size:12px;">Loading…</td></tr>';
+  const rows=await sbGet('lb_contacts?select=id,first_name,last_name,title,company_name,vertical,icp_score,email,linkedin_url,final_completeness_score,created_at&order=created_at.desc&limit=500');
+  _histAll=rows||[];
+  _histFiltered=[..._histAll];
+  _histPage=0;
+  renderHistPage();
+}
+
+function filterHistory(){
+  const q=(document.getElementById('hist-search').value||'').toLowerCase();
+  _histFiltered=!q?[..._histAll]:_histAll.filter(r=>{
+    const name=((r.first_name||'')+(r.last_name||'')).toLowerCase();
+    const co=(r.company_name||'').toLowerCase();
+    return name.includes(q)||co.includes(q);
+  });
+  _histPage=0;
+  renderHistPage();
+}
+
+function histPage(dir){ _histPage=Math.max(0,Math.min(_histPage+dir,Math.ceil(_histFiltered.length/HIST_PAGE_SIZE)-1)); renderHistPage(); }
+
+function renderHistPage(){
+  const tbody=document.getElementById('hist-tbody');
+  const info=document.getElementById('hist-page-info');
+  const prev=document.getElementById('hist-prev');
+  const next=document.getElementById('hist-next');
+  if(!tbody) return;
+  const total=_histFiltered.length;
+  const pages=Math.ceil(total/HIST_PAGE_SIZE);
+  const start=_histPage*HIST_PAGE_SIZE;
+  const slice=_histFiltered.slice(start,start+HIST_PAGE_SIZE);
+  if(!slice.length){ tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text-dim);font-size:12px;">No contacts found</td></tr>'; }
+  else {
+    tbody.innerHTML=slice.map(r=>{
+      const name=[r.first_name,r.last_name].filter(Boolean).join(' ')||'—';
+      const score=r.icp_score;
+      const cls=score>=80?'high':score>=60?'mid':'low';
+      const email=r.email?`<span style="font-family:var(--mono);font-size:9.5px;">${r.email}</span>`:'<span style="color:var(--text-dim);">—</span>';
+      const li=r.linkedin_url?`<a href="${r.linkedin_url}" target="_blank" style="color:var(--accent);">🔗</a>`:'<span style="color:var(--text-dim);">—</span>';
+      const comp=r.final_completeness_score?r.final_completeness_score+'%':'—';
+      return `<tr>
+        <td style="font-weight:700;">${name}</td>
+        <td style="color:var(--text-mid);font-size:10.5px;">${r.title||'—'}</td>
+        <td style="font-weight:600;">${r.company_name||'—'}</td>
+        <td><span class="badge badge-blue" style="font-size:9px;">${(r.vertical||'—').replace(/_/g,' ')}</span></td>
+        <td>${score!=null?`<span class="icp-cell ${cls}">${score}</span>`:'—'}</td>
+        <td>${email}</td>
+        <td>${li}</td>
+        <td style="font-family:var(--mono);font-size:10.5px;">${comp}</td>
+        <td style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);">${fmtDate(r.created_at)}</td>
+      </tr>`;
+    }).join('');
+  }
+  if(info) info.textContent=`${start+1}–${Math.min(start+HIST_PAGE_SIZE,total)} of ${total} contacts`;
+  if(prev){ prev.disabled=_histPage===0; }
+  if(next){ next.disabled=_histPage>=pages-1||!total; }
+}
+
+function exportHistoryCSV(){
+  if(!_histFiltered.length){ alert('No data to export.'); return; }
+  const headers=['Name','Title','Company','Vertical','ICP Score','Email','LinkedIn','Completeness','Date'];
+  const rows=_histFiltered.map(r=>[
+    [r.first_name,r.last_name].filter(Boolean).join(' '),
+    r.title||'',r.company_name||'',r.vertical||'',
+    r.icp_score||'',r.email||'',r.linkedin_url||'',
+    r.final_completeness_score?r.final_completeness_score+'%':'',
+    r.created_at?new Date(r.created_at).toLocaleDateString():''
+  ].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
+  const csv=[headers.join(','),...rows].join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='leadbooster-contacts-'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click();
+}
+
+// ============================================================
+// FEEDBACK
+// ============================================================
+let fbRating=0;
+function setRating(val){
+  fbRating=val;
+  document.querySelectorAll('.fb-star').forEach(s=>{
+    const v=parseInt(s.dataset.val);
+    s.classList.toggle('active',v<=val);
+    s.style.color=v<=val?'#F59E0B':'#94A3B8';
+  });
+}
+
+async function submitFeedback(){
+  const name=document.getElementById('fb-name-field').value.trim()||((window._currentUser||{}).name||'Anonymous');
+  const category=document.getElementById('fb-category').value;
+  const message=document.getElementById('fb-message').value.trim();
+  const reference=document.getElementById('fb-reference').value.trim();
+  const btn=document.getElementById('btn-feedback');
+  const succ=document.getElementById('fb-success');
+  const err=document.getElementById('fb-error-msg');
+  if(!message){ alert('Please describe your feedback before submitting.'); return; }
+  btn.disabled=true; btn.textContent='Sending…';
+  succ.style.display='none'; err.style.display='none';
+  try {
+    const r=await fetch('https://manageai2026.app.n8n.cloud/webhook/lb-feedback',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name,email:(window._currentUser||{}).email||'unknown',category:category||'general',rating:fbRating,message,reference,submitted_at:new Date().toISOString()})
+    });
+    if(r.ok){ succ.style.display='block'; document.getElementById('fb-message').value=''; document.getElementById('fb-reference').value=''; document.getElementById('fb-category').value=''; setRating(0); loadRecentFeedback(); }
+    else throw new Error('Failed');
+  } catch(e){ err.style.display='block'; }
+  btn.disabled=false; btn.textContent='Send Feedback';
+}
+
+async function loadRecentFeedback(){
+  const el=document.getElementById('recent-feedback-list');
+  if(!el) return;
+  const rows=await sbGet('lb_feedback?select=*&order=submitted_at.desc&limit=5');
+  if(!rows||!rows.length){ el.innerHTML='<div class="empty-state"><div class="empty-text">No feedback submitted yet</div></div>'; return; }
+  el.innerHTML=`<table class="q-table">
+    <thead><tr><th>From</th><th>Category</th><th>Rating</th><th>Message</th><th>Date</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td style="font-weight:700;">${r.name||'—'}</td>
+      <td><span class="badge badge-blue" style="font-size:9px;">${(r.category||'—').replace(/_/g,' ')}</span></td>
+      <td style="color:var(--amber);font-weight:700;">${r.rating?'★'.repeat(r.rating):'—'}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10.5px;">${(r.message||'').substring(0,60)}</td>
+      <td style="font-family:var(--mono);font-size:9.5px;color:var(--text-dim);">${fmtDate(r.submitted_at)}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function populateSettings(){
+  const u=window._currentUser||{};
+  const el=document.getElementById('set-name');
+  if(el) el.value=u.name||'';
+  const em=document.getElementById('set-email');
+  if(em) em.value=u.email||'';
+  const rb=document.getElementById('set-role-badge');
+  if(rb) rb.textContent=u.role||'user';
+}
+
+// ============================================================
+// AUTO REFRESH
+// ============================================================
+let _refreshInterval=null;
+function startDashboardAutoRefresh(){
+  if(_refreshInterval) clearInterval(_refreshInterval);
+  _refreshInterval=setInterval(()=>{
+    if(currentTab==='dashboard') loadDashboard();
+  }, 60000);
+}
+</script>
+</body>
+</html>
